@@ -50,7 +50,7 @@ async function main() {
     events: await prisma.event.count(),
     tickets: await prisma.ticket.count(),
     songs: await prisma.song.count(),
-    nfts: await prisma.nft.count(),
+    nfts: await prisma.nFT.count(),
     royalties: await prisma.royalty.count(),
     votes: await prisma.vote.count(),
     transactions: await prisma.transaction.count(),
