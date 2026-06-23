@@ -29,11 +29,11 @@ export default function RegisterPage() {
     setLoading(true)
 
     const result = await register(name, email, password, role)
+    setLoading(false)
     if (result.success) {
       router.push("/dashboard")
     } else {
       setError(result.error ?? "Something went wrong")
-      setLoading(false)
     }
   }
 

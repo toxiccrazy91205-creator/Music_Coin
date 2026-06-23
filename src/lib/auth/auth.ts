@@ -5,15 +5,15 @@ import { hashPassword, verifyPassword } from "@/lib/auth/password"
 import { signToken, setSessionCookie, clearSessionCookie, getSession } from "@/lib/auth/session"
 import { loginSchema, registerSchema, type LoginInput, type RegisterInput } from "@/lib/auth/validation"
 import type { AuthResult } from "@/lib/auth/roles"
-import type { IUser } from "@/types"
+import type { IUserPublic } from "@/types"
 import { Prisma } from "@prisma/client"
 
-function sanitizeUser(user: { password: string; [key: string]: unknown }): IUser {
+function sanitizeUser(user: { password: string; [key: string]: unknown }): IUserPublic {
   const { password: _, ...safe } = user
-  return safe as unknown as IUser
+  return safe as IUserPublic
 }
 
-export async function register(input: RegisterInput): Promise<AuthResult<IUser>> {
+export async function register(input: RegisterInput): Promise<AuthResult<IUserPublic>> {
   try {
     const parsed = registerSchema.safeParse(input)
     if (!parsed.success) {
@@ -51,7 +51,7 @@ export async function register(input: RegisterInput): Promise<AuthResult<IUser>>
   }
 }
 
-export async function login(input: LoginInput): Promise<AuthResult<IUser>> {
+export async function login(input: LoginInput): Promise<AuthResult<IUserPublic>> {
   try {
     const parsed = loginSchema.safeParse(input)
     if (!parsed.success) {
@@ -90,7 +90,7 @@ export async function logout(): Promise<AuthResult<null>> {
   }
 }
 
-export async function getProfile(): Promise<AuthResult<IUser>> {
+export async function getProfile(): Promise<AuthResult<IUserPublic>> {
   try {
     const session = await getSession()
     if (!session) {
@@ -107,7 +107,7 @@ export async function getProfile(): Promise<AuthResult<IUser>> {
       return { success: false, error: "User not found" }
     }
 
-    return { success: true, data: user as unknown as IUser }
+    return { success: true, data: user as unknown as IUserPublic }
   } catch (error) {
     console.error("GetProfile error:", error)
     return { success: false, error: "Something went wrong. Please try again." }

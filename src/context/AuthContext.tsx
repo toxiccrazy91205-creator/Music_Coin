@@ -7,10 +7,10 @@ import {
   getProfile as getProfileAction,
   register as registerAction,
 } from "@/lib/auth/auth"
-import type { IUser, UserRole } from "@/types"
+import type { IUserPublic, UserRole } from "@/types"
 
 interface AuthContextType {
-  user: IUser | null
+  user: IUserPublic | null
   isLoading: boolean
   isAuthenticated: boolean
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
@@ -27,7 +27,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<IUser | null>(null)
+  const [user, setUser] = useState<IUserPublic | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   const refreshProfile = useCallback(async () => {

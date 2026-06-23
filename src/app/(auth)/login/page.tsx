@@ -23,11 +23,11 @@ export default function LoginPage() {
     setLoading(true)
 
     const result = await login(email, password)
+    setLoading(false)
     if (result.success) {
       router.push("/dashboard")
     } else {
       setError(result.error ?? "Something went wrong")
-      setLoading(false)
     }
   }
 

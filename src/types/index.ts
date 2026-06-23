@@ -55,6 +55,8 @@ export interface IUser {
   updatedAt: Date
 }
 
+export type IUserPublic = Omit<IUser, "password">
+
 export interface IWallet {
   id: string
   userId: string

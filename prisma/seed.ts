@@ -11,7 +11,7 @@ const SEED_USERS = [
   { name: "Admin", email: "admin@musiccoin.festival", password: "Admin@123", role: "ADMIN" as const },
   { name: "Event Organizer", email: "organizer@musiccoin.festival", password: "Organizer@123", role: "ORGANIZER" as const },
   { name: "Artist One", email: "artist@musiccoin.festival", password: "Artist@123", role: "ARTIST" as const },
-  { name: "Production House", email: "production@musiccoin.festival", password: "Prod@123", role: "PRODUCTION_HOUSE" as const },
+  { name: "Production House", email: "production@musiccoin.festival", password: "Production@123", role: "PRODUCTION_HOUSE" as const },
   { name: "Fan One", email: "fan@musiccoin.festival", password: "Fan@123", role: "FAN" as const },
 ]
 
