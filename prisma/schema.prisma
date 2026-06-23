@@ -62,7 +62,7 @@ model Wallet {
 
 model Event {
   id          String      @id @default(uuid()) @db.Uuid
-  artistId    String      @db.Uuid
+  organizerId String      @db.Uuid
   title       String
   description String
   venue       String
@@ -72,8 +72,8 @@ model Event {
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
-  artist  User     @relation(fields: [artistId], references: [id], onDelete: Cascade)
-  tickets Ticket[]
+  organizer User     @relation(fields: [organizerId], references: [id], onDelete: Cascade)
+  tickets   Ticket[]
 }
 
 model Ticket {
@@ -148,4 +148,7 @@ model Transaction {
 
   sender   Wallet @relation("SenderWallet", fields: [senderId], references: [id], onDelete: Cascade)
   receiver Wallet @relation("ReceiverWallet", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@index([senderId, createdAt])
+  @@index([receiverId, createdAt])
 }

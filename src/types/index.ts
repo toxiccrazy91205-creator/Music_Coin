@@ -67,7 +67,7 @@ export interface IWallet {
 
 export interface IEvent {
   id: string
-  artistId: string
+  organizerId: string
   title: string
   description: string
   venue: string
@@ -144,8 +144,34 @@ export interface IUserWithRelations extends IUser {
 }
 
 export interface IEventWithRelations extends IEvent {
-  artist: IUser
+  organizer: IUser
   tickets: ITicket[]
+}
+
+export interface IWalletWithTransactions extends IWallet {
+  sentTransactions: ITransaction[]
+  receivedTransactions: ITransaction[]
+}
+
+export interface ICreateEventInput {
+  title: string
+  description: string
+  venue: string
+  date: string
+  ticketPrice: number
+}
+
+export interface IUpdateEventInput {
+  title?: string
+  description?: string
+  venue?: string
+  date?: string
+  ticketPrice?: number
+}
+
+export interface ITransferInput {
+  receiverEmail: string
+  amount: number
 }
 
 export interface INFTWithRelations extends INFT {
