@@ -1,0 +1,149 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  ADMIN
+  ARTIST
+  FAN
+}
+
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  CANCELLED
+  COMPLETED
+}
+
+enum TransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  TRANSFER
+  TICKET_PURCHASE
+  ROYALTY_PAYMENT
+}
+
+model User {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String
+  email     String   @unique
+  password  String
+  role      UserRole @default(FAN)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  wallet        Wallet?
+  events        Event[]
+  tickets       Ticket[]
+  songs         Song[]
+  votesGiven    Vote[]    @relation("VoteFan")
+  votesReceived Vote[]    @relation("VoteArtist")
+  nftsOwned     NFT[]
+  royalties     Royalty[]
+}
+
+model Wallet {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @unique @db.Uuid
+  balance   Decimal  @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user                 User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sentTransactions     Transaction[] @relation("SenderWallet")
+  receivedTransactions Transaction[] @relation("ReceiverWallet")
+}
+
+model Event {
+  id          String      @id @default(uuid()) @db.Uuid
+  artistId    String      @db.Uuid
+  title       String
+  description String
+  venue       String
+  date        DateTime
+  ticketPrice Decimal
+  status      EventStatus @default(DRAFT)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  artist  User     @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  tickets Ticket[]
+}
+
+model Ticket {
+  id         String   @id @default(uuid()) @db.Uuid
+  eventId    String   @db.Uuid
+  userId     String   @db.Uuid
+  seatNumber String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Song {
+  id          String   @id @default(uuid()) @db.Uuid
+  artistId    String   @db.Uuid
+  title       String
+  description String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  artist User  @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  nfts   NFT[]
+}
+
+model NFT {
+  id        String   @id @default(uuid()) @db.Uuid
+  songId    String   @db.Uuid
+  ownerId   String   @db.Uuid
+  price     Decimal
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  song      Song      @relation(fields: [songId], references: [id], onDelete: Cascade)
+  owner     User      @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  royalties Royalty[]
+}
+
+model Royalty {
+  id        String   @id @default(uuid()) @db.Uuid
+  nftId     String   @db.Uuid
+  artistId  String   @db.Uuid
+  amount    Decimal
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  nft    NFT  @relation(fields: [nftId], references: [id], onDelete: Cascade)
+  artist User @relation(fields: [artistId], references: [id], onDelete: Cascade)
+}
+
+model Vote {
+  id        String   @id @default(uuid()) @db.Uuid
+  artistId  String   @db.Uuid
+  fanId     String   @db.Uuid
+  weight    Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  artist User @relation("VoteArtist", fields: [artistId], references: [id], onDelete: Cascade)
+  fan    User @relation("VoteFan", fields: [fanId], references: [id], onDelete: Cascade)
+}
+
+model Transaction {
+  id         String          @id @default(uuid()) @db.Uuid
+  senderId   String          @db.Uuid
+  receiverId String          @db.Uuid
+  amount     Decimal
+  type       TransactionType
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+
+  sender   Wallet @relation("SenderWallet", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver Wallet @relation("ReceiverWallet", fields: [receiverId], references: [id], onDelete: Cascade)
+}
