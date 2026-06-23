@@ -10,6 +10,8 @@ enum UserRole {
   ADMIN
   ARTIST
   FAN
+  ORGANIZER
+  PRODUCTION_HOUSE
 }
 
 enum EventStatus {
