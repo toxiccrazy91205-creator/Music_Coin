@@ -6,7 +6,7 @@ import { signToken, setSessionCookie, clearSessionCookie, getSession } from "@/l
 import { loginSchema, registerSchema, type LoginInput, type RegisterInput } from "@/lib/auth/validation"
 import type { AuthResult } from "@/lib/auth/roles"
 import type { IUserPublic } from "@/types"
-import { Prisma } from "@prisma/client"
+import { Prisma, TransactionType } from "@prisma/client"
 
 function sanitizeUser(user: { password: string; [key: string]: unknown }): IUserPublic {
   const { password: _, ...safe } = user
@@ -34,9 +34,24 @@ export async function register(input: RegisterInput): Promise<AuthResult<IUserPu
         data: { name, email, password: hashed, role },
       })
 
-      await tx.wallet.create({
+      const wallet = await tx.wallet.create({
         data: { userId: newUser.id, balance: new Prisma.Decimal(0) },
       })
+
+      if (role === "FAN") {
+        await tx.wallet.update({
+          where: { id: wallet.id },
+          data: { balance: { increment: new Prisma.Decimal(1000) } },
+        })
+        await tx.transaction.create({
+          data: {
+            senderId: wallet.id,
+            receiverId: wallet.id,
+            amount: new Prisma.Decimal(1000),
+            type: TransactionType.DEPOSIT,
+          },
+        })
+      }
 
       return newUser
     })
