@@ -45,6 +45,7 @@ export const EventService = {
     const event = await prisma.event.findUnique({ where: { id: eventId } })
     if (!event) throw new AppError("Event not found", 404)
     if (event.organizerId !== userId) throw new AppError("Not authorized to edit this event", 403)
+    if (event.status !== "DRAFT") throw new AppError("Cannot update event", 400)
 
     const updateData: Record<string, unknown> = {}
     if (data.title !== undefined) updateData.title = data.title
