@@ -1,47 +1,50 @@
 import "dotenv/config"
 import { PrismaClient } from "@prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
-import * as crypto from "crypto"
+import { hash } from "bcryptjs"
+import { Prisma } from "@prisma/client"
 
 const adapter = new PrismaPg(process.env.DATABASE_URL!)
 const prisma = new PrismaClient({ adapter })
 
-function hashPassword(password: string): string {
-  const salt = crypto.randomBytes(16).toString("hex")
-  const hash = crypto.pbkdf2Sync(password, salt, 1000, 64, "sha512").toString("hex")
-  return `${salt}:${hash}`
-}
+const SEED_USERS = [
+  { name: "Admin", email: "admin@musiccoin.festival", password: "Admin@123", role: "ADMIN" as const },
+  { name: "Event Organizer", email: "organizer@musiccoin.festival", password: "Organizer@123", role: "ORGANIZER" as const },
+  { name: "Artist One", email: "artist@musiccoin.festival", password: "Artist@123", role: "ARTIST" as const },
+  { name: "Production House", email: "production@musiccoin.festival", password: "Prod@123", role: "PRODUCTION_HOUSE" as const },
+  { name: "Fan One", email: "fan@musiccoin.festival", password: "Fan@123", role: "FAN" as const },
+]
 
 async function main() {
   console.log("Seeding database...")
+  const saltRounds = 12
 
-  const adminUser = await prisma.user.upsert({
-    where: { email: "admin@musiccoin.festival" },
-    update: {},
-    create: {
-      name: "Admin",
-      email: "admin@musiccoin.festival",
-      password: hashPassword("Admin@123"),
-      role: "ADMIN",
-    },
-  })
+  for (const userData of SEED_USERS) {
+    const hashed = await hash(userData.password, saltRounds)
 
-  console.log(`Admin user created: ${adminUser.email} (${adminUser.id})`)
-
-  const wallet = await prisma.wallet.findUnique({
-    where: { userId: adminUser.id },
-  })
-
-  if (!wallet) {
-    await prisma.wallet.create({
-      data: {
-        userId: adminUser.id,
-        balance: 1000,
+    const user = await prisma.user.upsert({
+      where: { email: userData.email },
+      update: {},
+      create: {
+        name: userData.name,
+        email: userData.email,
+        password: hashed,
+        role: userData.role,
       },
     })
-    console.log("Wallet created for admin user with balance 1000")
-  } else {
-    console.log(`Wallet found with balance: ${wallet.balance}`)
+
+    const wallet = await prisma.wallet.findUnique({
+      where: { userId: user.id },
+    })
+
+    if (!wallet) {
+      await prisma.wallet.create({
+        data: { userId: user.id, balance: new Prisma.Decimal(1000) },
+      })
+      console.log(`Created wallet for ${userData.email} (${userData.role}) with balance 1000`)
+    }
+
+    console.log(`Seeded user: ${userData.email} (${userData.role}) — ${user.id}`)
   }
 
   const tableCounts = {
@@ -56,7 +59,7 @@ async function main() {
     transactions: await prisma.transaction.count(),
   }
 
-  console.log("Database connection verified. Table counts:", JSON.stringify(tableCounts, null, 2))
+  console.log("Table counts:", JSON.stringify(tableCounts, null, 2))
   console.log("Seeding completed successfully!")
 }
 
