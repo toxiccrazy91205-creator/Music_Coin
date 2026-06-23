@@ -16,26 +16,52 @@ import {
   Menu,
   X,
   Music,
+  Search,
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useState } from "react"
+import type { UserRole } from "@/types"
 
-const navItems = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["ADMIN", "ORGANIZER", "ARTIST", "PRODUCTION_HOUSE", "FAN"] },
-  { href: "/dashboard/wallet", label: "My Wallet", icon: Wallet, roles: ["ADMIN", "ORGANIZER", "ARTIST", "PRODUCTION_HOUSE", "FAN"] },
-  { href: "/dashboard/events", label: "Events", icon: Calendar, roles: ["ORGANIZER", "ARTIST", "PRODUCTION_HOUSE"] },
-  { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3, roles: ["ADMIN", "ORGANIZER"] },
-  { href: "/dashboard/nfts", label: "NFTs", icon: ImageIcon, roles: ["ARTIST"] },
-  { href: "/dashboard/voting", label: "Voting", icon: Vote, roles: ["FAN"] },
-]
+interface NavItem {
+  href: string
+  label: string
+  icon: React.ComponentType<{ className?: string }>
+}
+
+const roleNav: Record<UserRole, NavItem[]> = {
+  ADMIN: [
+    { href: "/wallet", label: "My Wallet", icon: Wallet },
+    { href: "/analytics", label: "Analytics", icon: BarChart3 },
+  ],
+  ORGANIZER: [
+    { href: "/organizer", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/organizer/wallet", label: "My Wallet", icon: Wallet },
+    { href: "/organizer/events", label: "Events", icon: Calendar },
+    { href: "/analytics", label: "Analytics", icon: BarChart3 },
+  ],
+  ARTIST: [
+    { href: "/wallet", label: "My Wallet", icon: Wallet },
+    { href: "/events", label: "Events", icon: Calendar },
+    { href: "/nfts", label: "NFTs", icon: ImageIcon },
+  ],
+  PRODUCTION_HOUSE: [
+    { href: "/wallet", label: "My Wallet", icon: Wallet },
+    { href: "/events", label: "Events", icon: Calendar },
+  ],
+  FAN: [
+    { href: "/fan", label: "Browse Events", icon: Search },
+    { href: "/fan/wallet", label: "My Wallet", icon: Wallet },
+    { href: "/voting", label: "Voting", icon: Vote },
+  ],
+}
 
 export function Sidebar() {
   const pathname = usePathname()
   const { user, logout } = useAuth()
   const [open, setOpen] = useState(false)
 
-  const visibleItems = user ? navItems.filter((item) => item.roles.includes(user.role)) : []
+  const visibleItems = user ? roleNav[user.role] || [] : []
 
   return (
     <>
