@@ -12,6 +12,7 @@ export async function mintNftAction(input: {
   try {
     const session = await getSession()
     if (!session) return { success: false as const, error: "Not authenticated" }
+    if (session.role !== "ARTIST") return { success: false as const, error: "Only artists can mint NFTs" }
     const nft = await NftService.mintNft(session.sub, input)
     return { success: true as const, data: nft }
   } catch (error: unknown) {

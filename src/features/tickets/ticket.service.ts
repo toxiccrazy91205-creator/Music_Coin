@@ -16,7 +16,7 @@ export const TicketService = {
       const fanWallet = await tx.wallet.findUnique({ where: { userId } })
       if (!fanWallet) throw new AppError("Wallet not found", 404)
       if (fanWallet.balance.lessThan(event.ticketPrice)) {
-        throw new AppError("Insufficient funds", 400)
+        throw new AppError("Insufficient funds to purchase ticket", 400)
       }
 
       const organizerWallet = await tx.wallet.findUnique({ where: { userId: event.organizerId } })

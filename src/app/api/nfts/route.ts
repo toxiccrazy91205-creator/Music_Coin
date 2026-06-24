@@ -26,6 +26,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Missing required fields", statusCode: 400 }, { status: 400 })
     }
 
+    if (isNaN(Number(price)) || isNaN(Number(royaltyPercentage))) {
+      return NextResponse.json({ error: "Invalid price or royalty percentage", statusCode: 400 }, { status: 400 })
+    }
+
     const { NftService } = await import("@/features/nfts/nft.service")
     const nft = await NftService.mintNft(payload.sub as string, {
       title,

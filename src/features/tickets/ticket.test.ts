@@ -57,6 +57,14 @@ describe("TicketService", () => {
       expect(result.transaction.type).toBe("TICKET_PURCHASE")
     })
 
+    it("should reject if event does not exist", async () => {
+      mockPrisma.$transaction.mockImplementation(async (cb: (tx: typeof mockTx) => unknown) => {
+        mockTx.event.findUnique.mockResolvedValue(null)
+        return cb(mockTx)
+      })
+      await expect(TicketService.buyTicket("fan-1", "nonexistent")).rejects.toThrow("Event not found")
+    })
+
     it("should reject if event is not PUBLISHED", async () => {
       mockPrisma.$transaction.mockImplementation(async (cb: (tx: typeof mockTx) => unknown) => {
         mockTx.event.findUnique.mockResolvedValue({ ...validEvent, status: "DRAFT" })
@@ -81,7 +89,7 @@ describe("TicketService", () => {
         mockTx.wallet.findUnique.mockResolvedValue({ id: "fan-wallet", balance: { lessThan: () => true } })
         return cb(mockTx)
       })
-      await expect(TicketService.buyTicket("fan-1", "event-1")).rejects.toThrow("Insufficient funds")
+      await expect(TicketService.buyTicket("fan-1", "event-1")).rejects.toThrow("Insufficient funds to purchase ticket")
     })
 
     it("should allow purchase when capacity is null (unlimited)", async () => {

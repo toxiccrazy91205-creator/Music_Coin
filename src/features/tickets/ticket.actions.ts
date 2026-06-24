@@ -7,6 +7,7 @@ export async function buyTicketAction(eventId: string) {
   try {
     const session = await getSession()
     if (!session) return { success: false as const, error: "Not authenticated" }
+    if (session.role !== "FAN") return { success: false as const, error: "Only fans can purchase tickets" }
     const result = await TicketService.buyTicket(session.sub, eventId)
     return { success: true as const, data: result }
   } catch (error: unknown) {

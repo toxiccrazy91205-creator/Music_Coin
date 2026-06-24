@@ -56,7 +56,7 @@ export const NftService = {
       const buyerWallet = await tx.wallet.findUnique({ where: { userId: buyerId } })
       if (!buyerWallet) throw new AppError("Buyer wallet not found", 404)
       if (buyerWallet.balance.lessThan(nft.price)) {
-        throw new AppError("Insufficient funds", 400)
+        throw new AppError("Insufficient funds to purchase NFT", 400)
       }
 
       const sellerWallet = await tx.wallet.findUnique({ where: { userId: nft.ownerId } })

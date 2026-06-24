@@ -161,6 +161,7 @@ export interface ICreateEventInput {
   venue: string
   date: string
   ticketPrice: number
+  capacity?: number
 }
 
 export interface IUpdateEventInput {
