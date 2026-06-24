@@ -1,7 +1,13 @@
+import { getSession } from "@/lib/auth/session"
+import { redirect } from "next/navigation"
 import { getAnalyticsAction } from "@/features/analytics/analytics.actions"
 import { RevenueChart, NftSalesChart, EventSalesSummary, ArtistEarningsChart } from "./charts"
 
 export default async function AdminDashboard() {
+  const session = await getSession()
+  if (!session || session.role !== "ADMIN") {
+    redirect("/")
+  }
   const data = await getAnalyticsAction()
   if (!data) return <div className="p-8 text-center text-muted-foreground">Failed to load analytics</div>
 

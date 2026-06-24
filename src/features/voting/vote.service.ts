@@ -17,15 +17,23 @@ export const VoteService = {
 
       let reward = 0
       if (!existing) {
+        const platformUser = await tx.user.findUnique({
+          where: { email: "platform@musiccoin.demo" },
+          include: { wallet: true },
+        })
         const wallet = await tx.wallet.findUnique({ where: { userId: fanId } })
-        if (wallet) {
+        if (platformUser?.wallet && wallet) {
+          await tx.wallet.update({
+            where: { id: platformUser.wallet.id },
+            data: { balance: { decrement: VOTE_REWARD } },
+          })
           await tx.wallet.update({
             where: { id: wallet.id },
             data: { balance: { increment: VOTE_REWARD } },
           })
           await tx.transaction.create({
             data: {
-              senderId: wallet.id,
+              senderId: platformUser.wallet.id,
               receiverId: wallet.id,
               amount: VOTE_REWARD,
               type: "DEPOSIT",

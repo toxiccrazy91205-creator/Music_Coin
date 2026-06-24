@@ -4,6 +4,7 @@ const mockTx = vi.hoisted(() => ({
   vote: { upsert: vi.fn(), findUnique: vi.fn() },
   wallet: { findUnique: vi.fn(), update: vi.fn() },
   transaction: { create: vi.fn() },
+  user: { findUnique: vi.fn() },
 }))
 
 const mockPrisma = vi.hoisted(() => ({
@@ -29,6 +30,7 @@ describe("VoteService", () => {
   describe("castVote", () => {
     it("should create vote and award reward", async () => {
       mockTx.vote.upsert.mockResolvedValue({ id: "v-1", artistId: "a-1", fanId: "f-1", weight: 1 })
+      mockTx.user.findUnique.mockResolvedValue({ email: "platform@musiccoin.demo", wallet: { id: "pw-1" } })
       mockTx.wallet.findUnique.mockResolvedValue({ id: "w-1" })
       mockTx.wallet.update.mockResolvedValue({})
       mockTx.transaction.create.mockResolvedValue({})

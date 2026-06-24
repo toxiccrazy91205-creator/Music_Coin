@@ -1,14 +1,20 @@
 import { prisma } from "@/lib/prisma"
 import { AppError } from "@/lib/errors"
+import { Prisma } from "@prisma/client"
 import { WalletService } from "@/features/wallet/wallet.service"
 
 export const RoyaltyService = {
   async getRoyalties(
     userId: string,
+    userRole: string,
     filters: { artistId?: string; pending?: boolean } = {},
   ) {
     const where: Record<string, unknown> = {}
-    if (filters.artistId) where.artistId = filters.artistId
+    if (userRole === "ARTIST") {
+      where.artistId = userId
+    } else if (filters.artistId) {
+      where.artistId = filters.artistId
+    }
     if (filters.pending) where.paidAt = null
 
     const royalties = await prisma.royalty.findMany({
@@ -17,7 +23,8 @@ export const RoyaltyService = {
       orderBy: { createdAt: "desc" },
     })
 
-    return { royalties, total: royalties.length, count: royalties.length }
+    const total = royalties.reduce((sum, r) => sum + Number(r.amount), 0)
+    return { royalties, total, count: royalties.length }
   },
 
   async distributeRoyalties() {
@@ -50,7 +57,7 @@ export const RoyaltyService = {
       const artistWallet = await prisma.wallet.findUnique({ where: { userId: artistId } })
       if (!artistWallet) continue
 
-      const amt = { toString: () => String(entry.total) } as any
+      const amt = new Prisma.Decimal(entry.total)
       await WalletService.executeWalletTransfer(
         platformUser.wallet.id,
         artistWallet.id,

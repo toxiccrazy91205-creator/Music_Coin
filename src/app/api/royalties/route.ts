@@ -13,7 +13,7 @@ export async function GET(request: Request) {
       pending: searchParams.get("pending") === "true" || undefined,
     }
 
-    const data = await RoyaltyService.getRoyalties(session.sub, filters)
+    const data = await RoyaltyService.getRoyalties(session.sub, session.role, filters)
     return NextResponse.json(data)
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Something went wrong"

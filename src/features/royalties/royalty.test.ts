@@ -36,12 +36,12 @@ describe("RoyaltyService", () => {
       mockPrisma.royalty.findMany.mockResolvedValue([
         { id: "r-1", nftId: "n-1", artistId: "a-1", amount: { toString: () => "10" }, paidAt: null, nft: { song: { title: "Song" } }, artist: { name: "Artist" }, createdAt: new Date(), updatedAt: new Date() },
       ])
-      const result = await RoyaltyService.getRoyalties("a-1", { artistId: "a-1" })
+      const result = await RoyaltyService.getRoyalties("a-1", "ADMIN", { artistId: "a-1" })
       expect(result.royalties).toHaveLength(1)
     })
     it("should filter pending", async () => {
       mockPrisma.royalty.findMany.mockResolvedValue([])
-      await RoyaltyService.getRoyalties("u-1", { pending: true })
+      await RoyaltyService.getRoyalties("u-1", "ADMIN", { pending: true })
       expect(mockPrisma.royalty.findMany).toHaveBeenCalledWith(expect.objectContaining({
         where: expect.objectContaining({ paidAt: null }),
       }))
