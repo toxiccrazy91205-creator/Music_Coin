@@ -116,12 +116,13 @@ model NFT {
 }
 
 model Royalty {
-  id        String   @id @default(uuid()) @db.Uuid
-  nftId     String   @db.Uuid
-  artistId  String   @db.Uuid
+  id        String    @id @default(uuid()) @db.Uuid
+  nftId     String    @db.Uuid
+  artistId  String    @db.Uuid
   amount    Decimal
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  paidAt    DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
   nft    NFT  @relation(fields: [nftId], references: [id], onDelete: Cascade)
   artist User @relation(fields: [artistId], references: [id], onDelete: Cascade)
@@ -137,6 +138,8 @@ model Vote {
 
   artist User @relation("VoteArtist", fields: [artistId], references: [id], onDelete: Cascade)
   fan    User @relation("VoteFan", fields: [fanId], references: [id], onDelete: Cascade)
+
+  @@unique([fanId, artistId])
 }
 
 model Transaction {
