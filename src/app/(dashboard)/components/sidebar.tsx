@@ -32,7 +32,7 @@ interface NavItem {
 const roleNav: Record<UserRole, NavItem[]> = {
   ADMIN: [
     { href: "/wallet", label: "My Wallet", icon: Wallet },
-    { href: "/analytics", label: "Analytics", icon: BarChart3 },
+    { href: "/dashboard", label: "Dashboard", icon: BarChart3 },
   ],
   ORGANIZER: [
     { href: "/organizer", label: "Dashboard", icon: LayoutDashboard },
