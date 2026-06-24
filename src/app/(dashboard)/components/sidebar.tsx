@@ -43,7 +43,7 @@ const roleNav: Record<UserRole, NavItem[]> = {
   ARTIST: [
     { href: "/wallet", label: "My Wallet", icon: Wallet },
     { href: "/events", label: "Events", icon: Calendar },
-    { href: "/nfts", label: "NFTs", icon: ImageIcon },
+    { href: "/nfts", label: "My NFTs", icon: ImageIcon },
   ],
   PRODUCTION_HOUSE: [
     { href: "/wallet", label: "My Wallet", icon: Wallet },
@@ -52,6 +52,7 @@ const roleNav: Record<UserRole, NavItem[]> = {
   FAN: [
     { href: "/fan", label: "Browse Events", icon: Search },
     { href: "/fan/wallet", label: "My Wallet", icon: Wallet },
+    { href: "/nft-marketplace", label: "Marketplace", icon: ImageIcon },
     { href: "/voting", label: "Voting", icon: Vote },
   ],
 }

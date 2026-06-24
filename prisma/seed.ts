@@ -47,6 +47,53 @@ async function main() {
     console.log(`Seeded user: ${userData.email} (${userData.role}) — ${user.id}`)
   }
 
+  // Seed sample published event with capacity
+  const organizer = await prisma.user.findUnique({ where: { email: "organizer@musiccoin.festival" } })
+  const artist = await prisma.user.findUnique({ where: { email: "artist@musiccoin.festival" } })
+
+  if (organizer) {
+    const existingEvent = await prisma.event.findFirst({ where: { organizerId: organizer.id } })
+    if (!existingEvent) {
+      await prisma.event.create({
+        data: {
+          organizerId: organizer.id,
+          title: "Summer Music Festival 2026",
+          description: "A weekend of live music, food, and art in the park.",
+          venue: "City Park Arena",
+          date: new Date("2026-08-15"),
+          ticketPrice: new Prisma.Decimal(50),
+          capacity: 500,
+          status: "PUBLISHED",
+        },
+      })
+      console.log("Created sample published event with capacity 500")
+    }
+  }
+
+  // Seed sample NFT from artist
+  if (artist) {
+    const existingSong = await prisma.song.findFirst({ where: { artistId: artist.id } })
+    if (!existingSong) {
+      const song = await prisma.song.create({
+        data: {
+          artistId: artist.id,
+          title: "Neon Dreams",
+          description: "An original electronic track with unique vibes.",
+        },
+      })
+
+      await prisma.nFT.create({
+        data: {
+          songId: song.id,
+          ownerId: artist.id,
+          price: new Prisma.Decimal(100),
+          royaltyPercentage: 10,
+        },
+      })
+      console.log("Created sample NFT 'Neon Dreams' priced at 100 MC with 10% royalty")
+    }
+  }
+
   const tableCounts = {
     users: await prisma.user.count(),
     wallets: await prisma.wallet.count(),
