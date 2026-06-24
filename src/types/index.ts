@@ -73,6 +73,7 @@ export interface IEvent {
   venue: string
   date: Date
   ticketPrice: number
+  capacity: number | null
   status: EventStatus
   createdAt: Date
   updatedAt: Date
@@ -101,6 +102,7 @@ export interface INFT {
   songId: string
   ownerId: string
   price: number
+  royaltyPercentage: number
   createdAt: Date
   updatedAt: Date
 }
@@ -172,6 +174,21 @@ export interface IUpdateEventInput {
 export interface ITransferInput {
   receiverEmail: string
   amount: number
+}
+
+export interface ITicketWithEvent extends ITicket {
+  event: IEvent & { organizer: { id: string; name: string } }
+}
+
+export interface INftPurchaseRequest {
+  nftId: string
+}
+
+export interface IMintNftInput {
+  title: string
+  description: string
+  price: number
+  royaltyPercentage: number
 }
 
 export interface INFTWithRelations extends INFT {

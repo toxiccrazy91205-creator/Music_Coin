@@ -68,6 +68,7 @@ model Event {
   venue       String
   date        DateTime
   ticketPrice Decimal
+  capacity    Int?
   status      EventStatus @default(DRAFT)
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
@@ -101,12 +102,13 @@ model Song {
 }
 
 model NFT {
-  id        String   @id @default(uuid()) @db.Uuid
-  songId    String   @db.Uuid
-  ownerId   String   @db.Uuid
-  price     Decimal
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                String   @id @default(uuid()) @db.Uuid
+  songId            String   @db.Uuid
+  ownerId           String   @db.Uuid
+  price             Decimal
+  royaltyPercentage Int      @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   song      Song      @relation(fields: [songId], references: [id], onDelete: Cascade)
   owner     User      @relation(fields: [ownerId], references: [id], onDelete: Restrict)
