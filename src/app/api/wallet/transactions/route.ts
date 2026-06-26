@@ -18,10 +18,10 @@ export async function GET(request: Request) {
 
     const { WalletService } = await import("@/features/wallet/wallet.service")
     const result = await WalletService.getTransactions(userId, page, limit)
-    return NextResponse.json({ data: result })
+    return NextResponse.json({ success: true, data: result })
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Something went wrong"
     const status = message === "Not authenticated" ? 401 : 400
-    return NextResponse.json({ error: message, statusCode: status }, { status })
+    return NextResponse.json({ success: false, error: message }, { status })
   }
 }

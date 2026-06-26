@@ -1,7 +1,6 @@
 "use client"
 
 import * as React from "react"
-import { Slot } from "@radix-ui/react-slot"
 import { Controller, FormProvider, useFormContext } from "react-hook-form"
 import { cn } from "@/lib/utils"
 
@@ -13,10 +12,10 @@ type FormFieldContextValue = {
 
 const FormFieldContext = React.createContext<FormFieldContextValue>({} as FormFieldContextValue)
 
-const FormField = ({ ...props }: { name: string; children: React.ReactNode }) => {
+const FormField = ({ name, children, ...props }: { name: string; children: React.ReactNode } & React.ComponentProps<typeof Controller>) => {
   return (
-    <FormFieldContext.Provider value={{ name: props.name }}>
-      <Controller {...props as any} />
+    <FormFieldContext.Provider value={{ name }}>
+      <Controller {...props} name={name} render={({ field }) => React.cloneElement(children as React.ReactElement, { ...field })} />
     </FormFieldContext.Provider>
   )
 }

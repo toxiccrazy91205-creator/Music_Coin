@@ -17,7 +17,7 @@ const updateEventSchema = z.object({
   description: z.string().min(10).optional(),
   venue: z.string().min(3).optional(),
   date: z.string().optional(),
-  ticketPrice: z.coerce.number().positive().optional(),
+  ticketPrice: z.number().positive().optional(),
 })
 
 interface UpdateEventForm {
@@ -41,28 +41,30 @@ export default function EditEventPage() {
     reset,
     formState: { errors, isSubmitting },
   } = useForm<UpdateEventForm>({
-    resolver: zodResolver(updateEventSchema as any),
+    resolver: zodResolver(updateEventSchema),
   })
 
+  interface EventData {
+    id: string
+    title: string
+    description: string
+    venue: string
+    eventDate: Date | string
+    ticketPrice: unknown
+  }
+
   useEffect(() => {
-    getEventsAction().then((res) => {
+    getEventsAction(undefined, true).then((res) => {
       if (res.success) {
-        const events = res.data as unknown as Array<{
-          id: string
-          title: string
-          description: string
-          venue: string
-          date: string
-          ticketPrice: number
-        }>
+        const events = res.data as EventData[]
         const event = events.find((e) => e.id === eventId)
         if (event) {
           reset({
             title: event.title,
             description: event.description,
             venue: event.venue,
-            date: new Date(event.date).toISOString().split("T")[0],
-            ticketPrice: Number(event.ticketPrice),
+            date: new Date(event.eventDate).toISOString().split("T")[0],
+            ticketPrice: event.ticketPrice && typeof event.ticketPrice === 'object' ? (event.ticketPrice as { value: number }).value : (event.ticketPrice as number) || 0,
           })
         }
       }
@@ -74,7 +76,7 @@ export default function EditEventPage() {
     setServerError("")
     const result = await updateEventAction(eventId, data)
     if (result.success) {
-      router.push("/dashboard/organizer/events")
+      router.push("/organizer/events")
     } else {
       setServerError(result.error ?? "Something went wrong")
     }
@@ -123,7 +125,7 @@ export default function EditEventPage() {
             </div>
           </CardContent>
           <CardFooter className="flex justify-between">
-            <Button type="button" variant="outline" onClick={() => router.back()}>Cancel</Button>
+            <Button type="button" variant="outline" onClick={() => router.push("/organizer/events")}>Cancel</Button>
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? "Saving..." : "Save Changes"}
             </Button>

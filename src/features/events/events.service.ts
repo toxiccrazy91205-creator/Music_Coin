@@ -5,7 +5,7 @@ import { AppError } from "@/lib/errors"
 import type { ICreateEventInput, IUpdateEventInput } from "@/types"
 
 export const EventService = {
-  async getEvents(filters?: { status?: EventStatus; organizerId?: string }) {
+  async getEvents(filters?: { status?: EventStatus; organizerId?: string }, limit?: number) {
     const where: Record<string, unknown> = {}
     if (filters?.status) where.status = filters.status
     if (filters?.organizerId) where.organizerId = filters.organizerId
@@ -13,14 +13,18 @@ export const EventService = {
     return prisma.event.findMany({
       where,
       include: { organizer: { select: { id: true, name: true, email: true } } },
-      orderBy: { date: "asc" },
+      orderBy: { eventDate: "asc" },
+      ...(limit ? { take: limit } : {}),
     })
   },
 
   async getEventById(id: string) {
     const event = await prisma.event.findUnique({
       where: { id },
-      include: { organizer: { select: { id: true, name: true, email: true } } },
+      include: { 
+        organizer: { select: { id: true, name: true, email: true } },
+        _count: { select: { tickets: true } }
+      },
     })
     if (!event) throw new AppError("Event not found", 404)
     return event
@@ -33,8 +37,10 @@ export const EventService = {
         title: data.title,
         description: data.description,
         venue: data.venue,
-        date: new Date(data.date),
+        eventDate: new Date(data.eventDate),
         ticketPrice: new Prisma.Decimal(data.ticketPrice),
+        capacity: data.capacity,
+        sponsors: data.sponsors || [],
         status: "DRAFT",
       },
       include: { organizer: { select: { id: true, name: true, email: true } } },
@@ -51,7 +57,7 @@ export const EventService = {
     if (data.title !== undefined) updateData.title = data.title
     if (data.description !== undefined) updateData.description = data.description
     if (data.venue !== undefined) updateData.venue = data.venue
-    if (data.date !== undefined) updateData.date = new Date(data.date)
+    if (data.eventDate !== undefined) updateData.eventDate = new Date(data.eventDate)
     if (data.ticketPrice !== undefined) updateData.ticketPrice = new Prisma.Decimal(data.ticketPrice)
 
     return prisma.event.update({

@@ -17,9 +17,27 @@ import {
   X,
   Music,
   Search,
+  Users,
+  UserCheck,
+  ShieldAlert,
+  Activity,
+  ListOrdered,
+  DollarSign,
+  Shield,
+  PieChart,
+  Server,
+  Bot,
+  Settings,
+  Ticket,
+  QrCode,
+  Mic2,
+  Bell,
+  PlusCircle,
+  MessageCircle,
+  FileText
 } from "lucide-react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { useState } from "react"
 import type { UserRole } from "@/types"
 
@@ -31,34 +49,71 @@ interface NavItem {
 
 const roleNav: Record<UserRole, NavItem[]> = {
   ADMIN: [
+    { href: "/admin", label: "Overview", icon: LayoutDashboard },
+    { href: "/admin/users", label: "User Management", icon: Users },
+    { href: "/admin/artists/verification", label: "Verification", icon: UserCheck },
+    { href: "/admin/events/moderation", label: "Event Moderation", icon: ShieldAlert },
+    { href: "/admin/nfts", label: "NFT Monitoring", icon: Activity },
+    { href: "/admin/transactions", label: "Transactions", icon: ListOrdered },
+    { href: "/admin/revenue", label: "Revenue Reports", icon: DollarSign },
+    { href: "/admin/security", label: "Security", icon: Shield },
+    { href: "/admin/analytics", label: "Analytics", icon: PieChart },
+    { href: "/admin/system/health", label: "System Health", icon: Server },
+    { href: "/admin/ai", label: "AI Dashboard", icon: Bot },
+    { href: "/admin/settings", label: "Settings", icon: Settings },
     { href: "/wallet", label: "My Wallet", icon: Wallet },
-    { href: "/dashboard", label: "Dashboard", icon: BarChart3 },
   ],
   ORGANIZER: [
     { href: "/organizer", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/organizer/wallet", label: "My Wallet", icon: Wallet },
-    { href: "/organizer/events", label: "Events", icon: Calendar },
-    { href: "/analytics", label: "Analytics", icon: BarChart3 },
+    { href: "/organizer/events", label: "Event Management", icon: Calendar },
+    { href: "/organizer/events/new", label: "Create Event", icon: PlusCircle },
+    { href: "/organizer/tickets", label: "Ticket Management", icon: Ticket },
+    { href: "/organizer/attendance", label: "Attendance", icon: QrCode },
+    { href: "/organizer/analytics", label: "Analytics", icon: BarChart3 },
+    { href: "/organizer/payments", label: "Payments", icon: DollarSign },
+    { href: "/organizer/artists", label: "Artist Management", icon: Mic2 },
+    { href: "/organizer/notifications", label: "Notifications", icon: Bell },
+    { href: "/organizer/wallet", label: "Wallet", icon: Wallet },
   ],
   ARTIST: [
-    { href: "/wallet", label: "My Wallet", icon: Wallet },
-    { href: "/events", label: "Events", icon: Calendar },
-    { href: "/nfts", label: "My NFTs", icon: ImageIcon },
+    { href: "/artist/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/artist/profile", label: "My Profile", icon: UserCheck },
+    { href: "/artist/verification", label: "Verification", icon: ShieldAlert },
+    { href: "/artist/nfts", label: "NFT Management", icon: ImageIcon },
+    { href: "/artist/royalties", label: "Royalties", icon: DollarSign },
+    { href: "/artist/fans", label: "Fan Management", icon: Users },
+    { href: "/artist/community", label: "Community", icon: MessageCircle },
+    { href: "/artist/analytics", label: "Analytics", icon: BarChart3 },
+    { href: "/artist/wallet", label: "Wallet", icon: Wallet },
+    { href: "/artist/notifications", label: "Notifications", icon: Bell },
   ],
   PRODUCTION_HOUSE: [
+    { href: "/production-house", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/production-house/contracts", label: "Rights Management", icon: FileText },
+    { href: "/production-house/royalties", label: "Royalty Management", icon: DollarSign },
+    { href: "/production-house/stakeholders", label: "Stakeholders", icon: Users },
+    { href: "/production-house/transactions", label: "Transactions", icon: ListOrdered },
+    { href: "/production-house/analytics", label: "Analytics", icon: BarChart3 },
+    { href: "/production-house/profile", label: "Profile Settings", icon: Settings },
     { href: "/wallet", label: "My Wallet", icon: Wallet },
-    { href: "/events", label: "Events", icon: Calendar },
   ],
   FAN: [
-    { href: "/fan", label: "Browse Events", icon: Search },
-    { href: "/fan/wallet", label: "My Wallet", icon: Wallet },
-    { href: "/nft-marketplace", label: "Marketplace", icon: ImageIcon },
+    { href: "/fan/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/fan/profile", label: "My Profile", icon: UserCheck },
+    { href: "/fan/events", label: "Browse Events", icon: Search },
+    { href: "/fan/tickets", label: "My Tickets", icon: Ticket },
+    { href: "/fan/marketplace", label: "NFT Marketplace", icon: ImageIcon },
+    { href: "/fan/wallet", label: "Wallet", icon: Wallet },
+    { href: "/fan/token", label: "MusicCoin Token", icon: Music },
+    { href: "/fan/community", label: "Community", icon: Users },
+    { href: "/fan/notifications", label: "Notifications", icon: Bell },
     { href: "/voting", label: "Voting", icon: Vote },
   ],
 }
 
 export function Sidebar() {
   const pathname = usePathname()
+  const router = useRouter()
   const { user, logout } = useAuth()
   const [open, setOpen] = useState(false)
 
@@ -125,9 +180,10 @@ export function Sidebar() {
           <Button
             variant="outline"
             className="w-full justify-start gap-2"
-            onClick={() => {
-              logout()
+            onClick={async () => {
+              await logout()
               setOpen(false)
+              router.replace("/login")
             }}
           >
             <LogOut className="h-4 w-4" />

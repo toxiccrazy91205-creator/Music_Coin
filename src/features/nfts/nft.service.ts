@@ -34,13 +34,14 @@ export const NftService = {
     })
   },
 
-  async getAvailableNfts() {
+  async getAvailableNfts(limit?: number) {
     return prisma.nFT.findMany({
       include: {
         song: true,
         owner: { select: { id: true, name: true } },
       },
       orderBy: { createdAt: "desc" },
+      ...(limit ? { take: limit } : {}),
     })
   },
 

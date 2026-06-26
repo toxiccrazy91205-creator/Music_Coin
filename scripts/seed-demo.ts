@@ -1,6 +1,12 @@
+import "dotenv/config"
 import { PrismaClient, UserRole } from "@prisma/client"
+import { PrismaPg } from "@prisma/adapter-pg"
+import { Pool } from "pg"
+import { hash } from "bcryptjs"
 
-const prisma = new PrismaClient()
+const pool = new Pool({ connectionString: process.env.DATABASE_URL })
+const adapter = new PrismaPg(pool)
+const prisma = new PrismaClient({ adapter })
 
 async function main() {
   const alreadySeeded = await prisma.user.findFirst({ where: { email: "fan1@demo.com" } })
@@ -12,10 +18,11 @@ async function main() {
   console.log("Seeding demo data...")
 
   // 1. Create platform admin wallet user
+  const platformPw = await hash("demo", 12)
   const platformUser = await prisma.user.upsert({
     where: { email: "platform@musiccoin.demo" },
-    update: {},
-    create: { name: "Platform Admin", email: "platform@musiccoin.demo", password: "demo", role: "ORGANIZER" },
+    update: { password: platformPw },
+    create: { name: "Platform Admin", email: "platform@musiccoin.demo", password: platformPw, role: "ORGANIZER" },
   })
   let pw = await prisma.wallet.findUnique({ where: { userId: platformUser.id } })
   if (!pw) {
@@ -26,10 +33,11 @@ async function main() {
   console.log("  Platform wallet:", pw.id, "balance:", 100000)
 
   async function createUser(name: string, email: string, role: UserRole) {
+    const hashedPw = await hash("demo", 12)
     const user = await prisma.user.upsert({
       where: { email },
-      update: {},
-      create: { name, email, password: "demo", role },
+      update: { password: hashedPw },
+      create: { name, email, password: hashedPw, role },
     })
     let wallet = await prisma.wallet.findUnique({ where: { userId: user.id } })
     if (!wallet) {
@@ -65,6 +73,45 @@ async function main() {
   }
   console.log("  Created 5 production houses")
 
+  // 5b. Create Production Contracts
+  const phUsers = await prisma.user.findMany({ where: { role: "PRODUCTION_HOUSE" } })
+  const artistUsers = await prisma.user.findMany({ where: { role: "ARTIST" } })
+  let contractCount = 0
+  for (let i = 0; i < phUsers.length && i < artistUsers.length; i++) {
+    const contract = await prisma.productionContract.create({
+      data: {
+        productionHouseId: phUsers[i].id,
+        artistId: artistUsers[i].id,
+        revenueSplit: 30 + Math.floor(Math.random() * 30),
+        royaltySplit: 10 + Math.floor(Math.random() * 15),
+      },
+    }).catch(() => null)
+    if (contract) contractCount++
+  }
+  console.log(`  Created ${contractCount} production contracts`)
+
+  // 5c. Create Smart Contract Splits
+  let splitCount = 0
+  for (let i = 0; i < Math.min(phUsers.length, 3); i++) {
+    for (let j = 0; j < Math.min(artistUsers.length, 3); j++) {
+      const split = await prisma.smartContractSplit.create({
+        data: {
+          contractName: `Split Contract ${i}-${j}`,
+          totalRevenue: Math.floor(Math.random() * 10000 + 1000),
+          artistId: artistUsers[j].id,
+          artistPercentage: 40 + Math.floor(Math.random() * 20),
+          productionHouseId: phUsers[i].id,
+          productionHousePercentage: 10 + Math.floor(Math.random() * 20),
+          producerPercentage: 5 + Math.floor(Math.random() * 10),
+          labelPercentage: 5 + Math.floor(Math.random() * 10),
+          organizerPercentage: 5 + Math.floor(Math.random() * 10),
+        },
+      }).catch(() => null)
+      if (split) splitCount++
+    }
+  }
+  console.log(`  Created ${splitCount} smart contract splits`)
+
   // 6. Festivals (events)
   const festivalNames = ["Summer Vibes", "Rock Fest", "Jazz Night", "EDM Festival", "Hip Hop Summit",
     "Classical Evening", "Folk Gathering", "Indie Fest", "Metal Mayhem", "Pop Explosion"]
@@ -74,7 +121,7 @@ async function main() {
       data: {
         title: festivalNames[i],
         description: `Annual ${festivalNames[i]} music festival`,
-        date: new Date(Date.now() + (i + 1) * 30 * 24 * 60 * 60 * 1000),
+        eventDate: new Date(Date.now() + (i + 1) * 30 * 24 * 60 * 60 * 1000),
         venue: `Venue ${i + 1}`,
         capacity: 5000 + i * 1000,
         organizerId: organizer.user.id,

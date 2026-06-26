@@ -116,7 +116,7 @@ describe("TicketService", () => {
       expect(mockPrisma.ticket.findMany).toHaveBeenCalledWith({
         where: { userId: "fan-1" },
         include: { event: { include: { organizer: { select: { id: true, name: true } } } } },
-        orderBy: { createdAt: "desc" },
+        orderBy: { purchaseDate: "desc" },
       })
     })
   })

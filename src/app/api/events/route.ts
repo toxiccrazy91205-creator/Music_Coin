@@ -18,6 +18,7 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
     const status = searchParams.get("status") as EventStatus | null
+    const limit = searchParams.get("limit")
     const { EventService } = await import("@/features/events/events.service")
 
     const filters: Record<string, unknown> = {}
@@ -25,11 +26,12 @@ export async function GET(request: Request) {
 
     const events = await EventService.getEvents(
       Object.keys(filters).length > 0 ? (filters as { status?: EventStatus }) : undefined,
+      limit ? Number(limit) : undefined,
     )
-    return NextResponse.json({ data: events })
+    return NextResponse.json({ success: true, data: events })
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Something went wrong"
-    return NextResponse.json({ error: message, statusCode: 400 }, { status: 400 })
+    return NextResponse.json({ success: false, error: message }, { status: 400 })
   }
 }
 
@@ -37,31 +39,31 @@ export async function POST(request: Request) {
   try {
     const userId = await getUserId(request)
     if (!userId) {
-      return NextResponse.json({ error: "Not authenticated", statusCode: 401 }, { status: 401 })
+      return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 })
     }
 
     const body = await request.json()
-    const { title, description, venue, date, ticketPrice } = body
+    const { title, description, venue, date, eventDate, ticketPrice } = body
 
-    if (!title || !description || !venue || !date || ticketPrice === undefined) {
+    if (!title || !description || !venue || !(date || eventDate) || ticketPrice === undefined) {
       return NextResponse.json(
-        { error: "Missing required fields: title, description, venue, date, ticketPrice", statusCode: 400 },
+        { success: false, error: "Missing required fields: title, description, venue, eventDate, ticketPrice" },
         { status: 400 },
       )
     }
 
     const { EventService } = await import("@/features/events/events.service")
     const event = await EventService.createEvent(userId, {
-      title,
-      description,
-      venue,
-      date,
-      ticketPrice: Number(ticketPrice),
+        title,
+        description,
+        venue,
+        eventDate: date || eventDate, // fallback in case old clients send date
+        ticketPrice: Number(ticketPrice),
     })
 
-    return NextResponse.json({ data: event }, { status: 201 })
+    return NextResponse.json({ success: true, data: event }, { status: 201 })
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Something went wrong"
-    return NextResponse.json({ error: message, statusCode: 400 }, { status: 400 })
+    return NextResponse.json({ success: false, error: message }, { status: 400 })
   }
 }

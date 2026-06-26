@@ -2,6 +2,7 @@
 
 import { NftService } from "@/features/nfts/nft.service"
 import { getSession } from "@/lib/auth/session"
+import { serialize } from "@/lib/serialize"
 
 export async function mintNftAction(input: {
   title: string
@@ -14,7 +15,7 @@ export async function mintNftAction(input: {
     if (!session) return { success: false as const, error: "Not authenticated" }
     if (session.role !== "ARTIST") return { success: false as const, error: "Only artists can mint NFTs" }
     const nft = await NftService.mintNft(session.sub, input)
-    return { success: true as const, data: nft }
+    return { success: true as const, data: serialize(nft) }
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Something went wrong"
     return { success: false as const, error: message }
@@ -24,7 +25,7 @@ export async function mintNftAction(input: {
 export async function getNftsAction() {
   try {
     const nfts = await NftService.getAvailableNfts()
-    return { success: true as const, data: nfts }
+    return { success: true as const, data: serialize(nfts) }
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Something went wrong"
     return { success: false as const, error: message }
@@ -36,7 +37,7 @@ export async function buyNftAction(nftId: string) {
     const session = await getSession()
     if (!session) return { success: false as const, error: "Not authenticated" }
     const result = await NftService.buyNft(session.sub, nftId)
-    return { success: true as const, data: result }
+    return { success: true as const, data: serialize(result) }
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Something went wrong"
     return { success: false as const, error: message }

@@ -40,20 +40,50 @@ export async function getSession(): Promise<TokenPayload | null> {
   }
 }
 
-export async function setSessionCookie(token: string): Promise<void> {
+export async function setSessionCookie(payload: Omit<TokenPayload, "iat" | "exp">): Promise<void> {
   const cookieStore = await cookies()
-  cookieStore.set("__session", token, {
+  
+  // 1. Create short-lived access token (15 minutes)
+  const sessionToken = await new SignJWT({ ...payload } as unknown as JWTPayload)
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setExpirationTime("15m")
+    .sign(getSecret())
+
+  cookieStore.set("__session", sessionToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
-    maxAge: 60 * 60 * 24 * 7,
+    maxAge: 60 * 15, // 15 minutes
+  })
+
+  // 2. Create long-lived refresh token (7 days)
+  const refreshToken = await new SignJWT({ ...payload } as unknown as JWTPayload)
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setExpirationTime("7d")
+    .sign(getSecret())
+
+  cookieStore.set("__refresh", refreshToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 7, // 7 days
   })
 }
 
 export async function clearSessionCookie(): Promise<void> {
   const cookieStore = await cookies()
   cookieStore.set("__session", "", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: 0,
+  })
+  cookieStore.set("__refresh", "", {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",

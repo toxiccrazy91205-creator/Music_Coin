@@ -30,8 +30,9 @@ export async function register(input: RegisterInput): Promise<AuthResult<IUserPu
     const hashed = await hashPassword(password)
 
     const user = await prisma.$transaction(async (tx) => {
+      const isApproved = role === "FAN" ? true : false;
       const newUser = await tx.user.create({
-        data: { name, email, password: hashed, role },
+        data: { name, email, password: hashed, role, isApproved },
       })
 
       const wallet = await tx.wallet.create({
@@ -56,8 +57,7 @@ export async function register(input: RegisterInput): Promise<AuthResult<IUserPu
       return newUser
     })
 
-    const token = await signToken({ sub: user.id, email: user.email, role: user.role })
-    await setSessionCookie(token)
+    await setSessionCookie({ sub: user.id, email: user.email, role: user.role })
 
     return { success: true, data: sanitizeUser(user) }
   } catch (error) {
@@ -85,8 +85,7 @@ export async function login(input: LoginInput): Promise<AuthResult<IUserPublic>>
       return { success: false, error: "Invalid email or password" }
     }
 
-    const token = await signToken({ sub: user.id, email: user.email, role: user.role })
-    await setSessionCookie(token)
+    await setSessionCookie({ sub: user.id, email: user.email, role: user.role })
 
     return { success: true, data: sanitizeUser(user) }
   } catch (error) {

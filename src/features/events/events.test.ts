@@ -25,18 +25,17 @@ vi.mock("@/lib/errors", () => ({
 
 vi.mock("@prisma/client", () => {
   class MockDecimal {
-    constructor(public value: any) {}
+    constructor(public value: number | string) {}
     toString() { return String(this.value) }
-    lessThan(x: any) { return this.value < x }
+    lessThan(x: number | string) { return this.value < x }
   }
   return {
-    Prisma: { Decimal: MockDecimal as any },
+    Prisma: { Decimal: MockDecimal },
     EventStatus: { DRAFT: "DRAFT", PUBLISHED: "PUBLISHED", CANCELLED: "CANCELLED" },
   }
 })
 
 import { EventService } from "./events.service"
-import { AppError as AppErrorClass } from "@/lib/errors"
 
 describe("EventService", () => {
   beforeEach(() => {
@@ -49,7 +48,7 @@ describe("EventService", () => {
     title: "Test Fest",
     description: "A great festival event for testing",
     venue: "Test Arena",
-    date: new Date("2026-08-15"),
+    eventDate: new Date("2026-08-15"),
     ticketPrice: new Prisma.Decimal(50),
     status: "DRAFT",
     createdAt: new Date(),
@@ -64,17 +63,17 @@ describe("EventService", () => {
       expect(mockPrisma.event.findMany).toHaveBeenCalledWith({
         where: {},
         include: { organizer: { select: { id: true, name: true, email: true } } },
-        orderBy: { date: "asc" },
+        orderBy: { eventDate: "asc" },
       })
     })
 
     it("should filter events by status", async () => {
       mockPrisma.event.findMany.mockResolvedValue([mockEvent])
-      await EventService.getEvents({ status: "PUBLISHED" as any })
+      await EventService.getEvents({ status: "PUBLISHED" as const })
       expect(mockPrisma.event.findMany).toHaveBeenCalledWith({
         where: { status: "PUBLISHED" },
         include: { organizer: { select: { id: true, name: true, email: true } } },
-        orderBy: { date: "asc" },
+        orderBy: { eventDate: "asc" },
       })
     })
 
@@ -84,14 +83,14 @@ describe("EventService", () => {
       expect(mockPrisma.event.findMany).toHaveBeenCalledWith({
         where: { organizerId: "user-1" },
         include: { organizer: { select: { id: true, name: true, email: true } } },
-        orderBy: { date: "asc" },
+        orderBy: { eventDate: "asc" },
       })
     })
   })
 
   describe("createEvent", () => {
     it("should create a new draft event", async () => {
-      const input = { title: "New Event", description: "Description text that is long enough", venue: "Venue", date: "2026-09-01", ticketPrice: 25 }
+      const input = { title: "New Event", description: "Description text that is long enough", venue: "Venue", eventDate: "2026-09-01", ticketPrice: 25 }
       mockPrisma.event.create.mockResolvedValue({ ...mockEvent, title: "New Event" })
 
       const event = await EventService.createEvent("user-1", input)
@@ -102,8 +101,10 @@ describe("EventService", () => {
           title: "New Event",
           description: "Description text that is long enough",
           venue: "Venue",
-          date: new Date("2026-09-01"),
+          eventDate: new Date("2026-09-01"),
           ticketPrice: new Prisma.Decimal(25),
+          capacity: undefined,
+          sponsors: [],
           status: "DRAFT",
         },
         include: { organizer: { select: { id: true, name: true, email: true } } },

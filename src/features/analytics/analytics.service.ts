@@ -42,9 +42,15 @@ export const AnalyticsService = {
     const eventSalesTotal = sumAmounts(eventSales)
     const eventSalesCount = eventSales.length
 
+    interface ArtistEarningEntry {
+      receiverId: string
+      amount: unknown
+      receiver?: { user?: { name: string } }
+    }
+
     const artistMap = new Map<string, { artistName: string; total: number }>()
-    for (const t of artistEarnings) {
-      const name = (t as any).receiver?.user?.name || "Unknown"
+    for (const t of artistEarnings as ArtistEarningEntry[]) {
+      const name = t.receiver?.user?.name || "Unknown"
       const entry = artistMap.get(t.receiverId) || { artistName: name, total: 0 }
       entry.total += Number(t.amount)
       artistMap.set(t.receiverId, entry)

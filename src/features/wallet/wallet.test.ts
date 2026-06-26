@@ -83,11 +83,20 @@ describe("WalletService", () => {
       const senderWallet = { id: "wallet-1", balance: new Prisma.Decimal(500) }
       const receiverWallet = { id: "wallet-2", balance: new Prisma.Decimal(100) }
 
-      mockPrisma.$transaction.mockImplementation(async (cb: Function) => {
+      type TxClient = {
+        wallet: {
+          findUniqueOrThrow: ReturnType<typeof vi.fn>
+          update: ReturnType<typeof vi.fn>
+        }
+        transaction: {
+          create: ReturnType<typeof vi.fn>
+        }
+      }
+
+      mockPrisma.$transaction.mockImplementation(async (cb: (tx: TxClient) => Promise<unknown>) => {
         return cb({
           wallet: {
-            findUniqueOrThrow: vi.fn()
-              .mockResolvedValueOnce(senderWallet),
+            findUniqueOrThrow: vi.fn().mockResolvedValueOnce(senderWallet),
             update: vi.fn()
               .mockResolvedValueOnce({ ...senderWallet, balance: new Prisma.Decimal(400) })
               .mockResolvedValueOnce({ ...receiverWallet, balance: new Prisma.Decimal(200) }),
@@ -114,10 +123,24 @@ describe("WalletService", () => {
     it("should reject transfer with insufficient funds", async () => {
       const senderWallet = { id: "wallet-1", balance: new Prisma.Decimal(10) }
 
-      mockPrisma.$transaction.mockImplementation(async (cb: Function) => {
+      type TxClient = {
+        wallet: {
+          findUniqueOrThrow: ReturnType<typeof vi.fn>
+          update: ReturnType<typeof vi.fn>
+        }
+        transaction: {
+          create: ReturnType<typeof vi.fn>
+        }
+      }
+
+      mockPrisma.$transaction.mockImplementation(async (cb: (tx: TxClient) => Promise<unknown>) => {
         return cb({
           wallet: {
             findUniqueOrThrow: vi.fn().mockResolvedValue(senderWallet),
+            update: vi.fn(),
+          },
+          transaction: {
+            create: vi.fn(),
           },
         })
       })
@@ -140,9 +163,20 @@ describe("WalletService", () => {
 
   describe("creditWallet", () => {
     it("should credit wallet and create DEPOSIT transaction", async () => {
-      mockPrisma.$transaction.mockImplementation(async (cb: Function) => {
+      type TxClient = {
+        wallet: {
+          findUniqueOrThrow: ReturnType<typeof vi.fn>
+          update: ReturnType<typeof vi.fn>
+        }
+        transaction: {
+          create: ReturnType<typeof vi.fn>
+        }
+      }
+
+      mockPrisma.$transaction.mockImplementation(async (cb: (tx: TxClient) => Promise<unknown>) => {
         return cb({
           wallet: {
+            findUniqueOrThrow: vi.fn(),
             update: vi.fn().mockResolvedValue({
               id: "wallet-1",
               balance: new Prisma.Decimal(1000),

@@ -59,8 +59,8 @@ async function main() {
           organizerId: organizer.id,
           title: "Summer Music Festival 2026",
           description: "A weekend of live music, food, and art in the park.",
-          venue: "City Park Arena",
-          date: new Date("2026-08-15"),
+          venue: "Main Stage A",
+          eventDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
           ticketPrice: new Prisma.Decimal(50),
           capacity: 500,
           status: "PUBLISHED",
@@ -85,6 +85,7 @@ async function main() {
       await prisma.nFT.create({
         data: {
           songId: song.id,
+          creatorId: artist.id,
           ownerId: artist.id,
           price: new Prisma.Decimal(100),
           royaltyPercentage: 10,

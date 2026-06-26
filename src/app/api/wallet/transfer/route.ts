@@ -18,7 +18,7 @@ export async function POST(request: Request) {
 
     if (!receiverEmail || !amount || amount <= 0) {
       return NextResponse.json(
-        { error: "Invalid request. receiverEmail and positive amount required", statusCode: 400 },
+        { success: false, error: "Invalid request. receiverEmail and positive amount required" },
         { status: 400 },
       )
     }
@@ -28,20 +28,20 @@ export async function POST(request: Request) {
 
     const senderWallet = await prisma.wallet.findUnique({ where: { userId } })
     if (!senderWallet) {
-      return NextResponse.json({ error: "Wallet not found", statusCode: 404 }, { status: 404 })
+      return NextResponse.json({ success: false, error: "Wallet not found" }, { status: 404 })
     }
 
     const receiver = await prisma.user.findUnique({ where: { email: receiverEmail } })
     if (!receiver) {
-      return NextResponse.json({ error: "Recipient not found", statusCode: 404 }, { status: 404 })
+      return NextResponse.json({ success: false, error: "Recipient not found" }, { status: 404 })
     }
     if (receiver.id === userId) {
-      return NextResponse.json({ error: "Cannot transfer to yourself", statusCode: 400 }, { status: 400 })
+      return NextResponse.json({ success: false, error: "Cannot transfer to yourself" }, { status: 400 })
     }
 
     const receiverWallet = await prisma.wallet.findUnique({ where: { userId: receiver.id } })
     if (!receiverWallet) {
-      return NextResponse.json({ error: "Recipient wallet not found", statusCode: 404 }, { status: 404 })
+      return NextResponse.json({ success: false, error: "Recipient wallet not found" }, { status: 404 })
     }
 
     const transaction = await WalletService.executeWalletTransfer(
@@ -50,10 +50,10 @@ export async function POST(request: Request) {
       new Prisma.Decimal(amount),
     )
 
-    return NextResponse.json({ data: transaction }, { status: 201 })
+    return NextResponse.json({ success: true, data: transaction }, { status: 201 })
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Something went wrong"
     const status = message === "Not authenticated" ? 401 : 400
-    return NextResponse.json({ error: message, statusCode: status }, { status })
+    return NextResponse.json({ success: false, error: message }, { status })
   }
 }

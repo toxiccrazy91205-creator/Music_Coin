@@ -49,8 +49,12 @@ export interface IUser {
   id: string
   name: string
   email: string
+  phone: string | null
   password: string
   role: UserRole
+  walletAddress: string | null
+  isVerified: boolean
+  isApproved: boolean
   createdAt: Date
   updatedAt: Date
 }
@@ -71,9 +75,11 @@ export interface IEvent {
   title: string
   description: string
   venue: string
-  date: Date
-  ticketPrice: number
+  city: string | null
+  country: string | null
+  eventDate: Date
   capacity: number | null
+  ticketPrice: number
   status: EventStatus
   createdAt: Date
   updatedAt: Date
@@ -84,7 +90,10 @@ export interface ITicket {
   eventId: string
   userId: string
   seatNumber: string | null
-  createdAt: Date
+  nftTokenId: string | null
+  qrCode: string | null
+  status: string
+  purchaseDate: Date
   updatedAt: Date
 }
 
@@ -99,10 +108,15 @@ export interface ISong {
 
 export interface INFT {
   id: string
-  songId: string
+  creatorId: string | null
   ownerId: string
+  songId: string
+  tokenId: string | null
+  contractAddress: string | null
+  metadataUrl: string | null
   price: number
   royaltyPercentage: number
+  status: string
   createdAt: Date
   updatedAt: Date
 }
@@ -111,7 +125,10 @@ export interface IRoyalty {
   id: string
   nftId: string
   artistId: string
+  percentage: number | null
   amount: number
+  transactionHash: string | null
+  paidAt: Date | null
   createdAt: Date
   updatedAt: Date
 }
@@ -127,10 +144,14 @@ export interface IVote {
 
 export interface ITransaction {
   id: string
+  userId: string | null
   senderId: string
   receiverId: string
   amount: number
+  currency: string
   type: TransactionType
+  status: string
+  blockchainHash: string | null
   createdAt: Date
   updatedAt: Date
 }
@@ -159,17 +180,22 @@ export interface ICreateEventInput {
   title: string
   description: string
   venue: string
-  date: string
+  eventDate: string
   ticketPrice: number
   capacity?: number
+  artists?: string[]
+  sponsors?: string[]
 }
 
 export interface IUpdateEventInput {
   title?: string
   description?: string
   venue?: string
-  date?: string
+  eventDate?: string
   ticketPrice?: number
+  capacity?: number
+  artists?: string[]
+  sponsors?: string[]
 }
 
 export interface ITransferInput {
@@ -196,4 +222,65 @@ export interface INFTWithRelations extends INFT {
   song: ISong
   owner: IUser
   royalties: IRoyalty[]
+}
+
+export interface IProductionContract {
+  id: string
+  productionHouseId: string
+  artistId: string
+  revenueSplit: number
+  royaltySplit: number
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ISmartContractSplit {
+  id: string
+  contractName: string
+  totalRevenue: number
+  artistId: string
+  artistPercentage: number
+  producerId: string | null
+  producerPercentage: number
+  labelId: string | null
+  labelPercentage: number
+  productionHouseId: string | null
+  productionHousePercentage: number
+  organizerId: string | null
+  organizerPercentage: number
+  createdAt: string
+  updatedAt: string
+}
+
+export interface IPHDashboard {
+  totalContracts: number
+  activeContracts: number
+  totalRevenue: number
+  pendingRoyalties: number
+  stakeholders: number
+  recentContracts: IProductionContract[]
+}
+
+export interface IPHAnalytics {
+  totalRevenue: number
+  revenueGrowth: number
+  activeContracts: number
+  totalArtists: number
+  averageRoyaltySplit: number
+  monthlyRevenue: { month: string; amount: number }[]
+  revenueByContract: { name: string; revenue: number }[]
+}
+
+export interface IPHStakeholder {
+  id: string
+  artistId: string
+  artist: { id: string; name: string; email: string } | null
+  contractName: string
+  totalRevenue: number
+  artistPercentage: number
+  producerPercentage: number
+  labelPercentage: number
+  productionHousePercentage: number
+  organizerPercentage: number
+  createdAt: string
 }

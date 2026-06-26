@@ -21,11 +21,11 @@ export async function GET(
     const { id } = await params
     const { EventService } = await import("@/features/events/events.service")
     const event = await EventService.getEventById(id)
-    return NextResponse.json({ data: event })
+    return NextResponse.json({ success: true, data: event })
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Something went wrong"
     const status = message === "Event not found" ? 404 : 400
-    return NextResponse.json({ error: message, statusCode: status }, { status })
+    return NextResponse.json({ success: false, error: message }, { status })
   }
 }
 
@@ -36,18 +36,18 @@ export async function PUT(
   try {
     const userId = await getUserId(request)
     if (!userId) {
-      return NextResponse.json({ error: "Not authenticated", statusCode: 401 }, { status: 401 })
+      return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 })
     }
 
     const { id } = await params
     const body = await request.json()
     const { EventService } = await import("@/features/events/events.service")
     const event = await EventService.updateEvent(id, userId, body)
-    return NextResponse.json({ data: event })
+    return NextResponse.json({ success: true, data: event })
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Something went wrong"
     const status = message.includes("Not authorized") ? 403 : message === "Event not found" ? 404 : 400
-    return NextResponse.json({ error: message, statusCode: status }, { status })
+    return NextResponse.json({ success: false, error: message }, { status })
   }
 }
 
@@ -58,16 +58,16 @@ export async function DELETE(
   try {
     const userId = await getUserId(request)
     if (!userId) {
-      return NextResponse.json({ error: "Not authenticated", statusCode: 401 }, { status: 401 })
+      return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 })
     }
 
     const { id } = await params
     const { EventService } = await import("@/features/events/events.service")
     await EventService.deleteEvent(id, userId)
-    return NextResponse.json({ data: null })
+    return NextResponse.json({ success: true, data: null })
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Something went wrong"
     const status = message.includes("Not authorized") ? 403 : message === "Event not found" ? 404 : 400
-    return NextResponse.json({ error: message, statusCode: status }, { status })
+    return NextResponse.json({ success: false, error: message }, { status })
   }
 }

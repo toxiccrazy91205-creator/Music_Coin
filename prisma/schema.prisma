@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
@@ -12,6 +13,8 @@ enum UserRole {
   FAN
   ORGANIZER
   PRODUCTION_HOUSE
+  PRODUCER
+  LABEL
 }
 
 enum EventStatus {
@@ -27,37 +30,138 @@ enum TransactionType {
   TRANSFER
   TICKET_PURCHASE
   ROYALTY_PAYMENT
+  STAKE
+  UNSTAKE
+  FEE_COLLECTION
+  SUBSCRIPTION_PAYMENT
+  ADVERTISEMENT_REVENUE
+  VERIFICATION_FEE
+  LISTING_FEE
+}
+
+enum WalletProvider {
+  METAMASK
+  WALLETCONNECT
+  COINBASE_WALLET
+}
+
+enum Currency {
+  MUSIC
+  USDT
+  USDC
+  MATIC
+  USD
+  INR
+}
+
+enum PaymentGateway {
+  SYSTEM
+  WEB3
+  STRIPE
+  RAZORPAY
+}
+
+enum SystemHealthType {
+  UPTIME
+  BACKUP
+  DISASTER_RECOVERY
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 model User {
-  id        String   @id @default(uuid()) @db.Uuid
-  name      String
-  email     String   @unique
-  password  String
-  role      UserRole @default(FAN)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String   @id @default(uuid()) @db.Uuid
+  name          String
+  email         String   @unique
+  phone         String?
+  password      String
+  role          UserRole @default(FAN)
+  walletAddress String?  @unique
+  avatarUrl     String?
+  isPremiumMember  Boolean  @default(false)
+  isVerified       Boolean  @default(false)
+  isApproved       Boolean  @default(true)
+  isMfaEnabled     Boolean  @default(false)
+  encryptedKycData String?  @db.Text
+  riskLevel        String   @default("LOW")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   wallet        Wallet?
+  artistProfile Artist?
   events        Event[]
+  eventsPerformed Event[] @relation("EventArtists")
   tickets       Ticket[]
   songs         Song[]
   votesGiven    Vote[]    @relation("VoteFan")
   votesReceived Vote[]    @relation("VoteArtist")
   nftsOwned     NFT[]
   royalties     Royalty[]
+  fanTokens     FanToken[]
+  transactions  Transaction[] @relation("UserTransactions")
+  contractsAsArtist          ProductionContract[] @relation("ContractArtist")
+  contractsAsProductionHouse ProductionContract[] @relation("ContractProductionHouse")
+  multiSigRequests MultiSigRequest[]
+  endorsementsGiven  CommunityEndorsement[] @relation("UserEndorsements")
+  splitsAsArtist     SmartContractSplit[]   @relation("SplitArtist")
+  splitsAsProducer   SmartContractSplit[]   @relation("SplitProducer")
+  splitsAsLabel      SmartContractSplit[]   @relation("SplitLabel")
+  splitsAsProductionHouse SmartContractSplit[] @relation("SplitProductionHouse")
+  splitsAsOrganizer  SmartContractSplit[]   @relation("SplitOrganizer")
+  fanClubMessagesAsArtist FanClubDiscussion[] @relation("FanClubArtist")
+  fanClubMessagesAsMember FanClubDiscussion[] @relation("FanClubMember")
+  pollsCreated       Poll[]                 @relation("ArtistPolls")
+  exclusiveContent   ExclusiveContent[]     @relation("ArtistExclusiveContent")
+  auditLogs          AuditLog[]             @relation("AdminAuditLogs")
+  notifications      Notification[]
+  multiSigWallets    MultiSigOwner[]        @relation("UserMultiSig")
+  subscriptions      Subscription[]
+  advertisements     Advertisement[]
+
+  @@index([email])
+}
+
+model Artist {
+  id                 String             @id @default(uuid()) @db.Uuid
+  userId             String             @unique @db.Uuid
+  stageName          String
+  bio                String?
+  genres             String[]
+  socialLinks        String[]
+  portfolio          String[]
+  verificationStatus VerificationStatus @default(PENDING)
+  reputationScore    Int                @default(0)
+  followersCount     Int                @default(0)
+  subscribersCount   Int                @default(0)
+  vipMembersCount    Int                @default(0)
+  createdAt          DateTime           @default(now())
+
+  user                 User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endorsementsReceived CommunityEndorsement[] @relation("ArtistEndorsements")
+
+  @@index([userId])
 }
 
 model Wallet {
-  id        String   @id @default(uuid()) @db.Uuid
-  userId    String   @unique @db.Uuid
-  balance   Decimal  @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id              String         @id @default(uuid()) @db.Uuid
+  userId          String         @unique @db.Uuid
+  provider        WalletProvider @default(METAMASK)
+  balance         Decimal        @default(0)
+  stakedBalance   Decimal        @default(0)
+  stakeLockUntil  DateTime?
+  lastClaimDate   DateTime?
+  isMultiSig      Boolean        @default(false)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
 
   user                 User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   sentTransactions     Transaction[] @relation("SenderWallet")
   receivedTransactions Transaction[] @relation("ReceiverWallet")
+  multiSigOwners       MultiSigOwner[]
 }
 
 model Event {
@@ -66,27 +170,45 @@ model Event {
   title       String
   description String
   venue       String
-  date        DateTime
-  ticketPrice Decimal
+  city        String?
+  country     String?
+  eventDate   DateTime
   capacity    Int?
-  status      EventStatus @default(DRAFT)
+  ticketPrice             Decimal
+  pricingTiers            Json?
+  isDynamicPricingEnabled Boolean     @default(false)
+  schedule                Json?
+  sponsors                String[]
+  status                  EventStatus @default(DRAFT)
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
   organizer User     @relation(fields: [organizerId], references: [id], onDelete: Cascade)
+  artists   User[]   @relation("EventArtists")
   tickets   Ticket[]
+  advertisements Advertisement[]
+
+  @@index([organizerId])
 }
 
 model Ticket {
-  id         String   @id @default(uuid()) @db.Uuid
-  eventId    String   @db.Uuid
-  userId     String   @db.Uuid
-  seatNumber String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id          String   @id @default(uuid()) @db.Uuid
+  eventId     String   @db.Uuid
+  userId      String   @db.Uuid
+  seatNumber  String?
+  tier        String?
+  price       Decimal  @default(0)
+  nftTokenId  String?
+  qrCode      String?
+  status      String   @default("VALID")
+  purchaseDate DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
   user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
+  @@index([userId])
 }
 
 model Song {
@@ -101,28 +223,50 @@ model Song {
   nfts   NFT[]
 }
 
+enum NftType {
+  SONG
+  ALBUM
+  CONCERT
+  COLLECTIBLE
+  VIP_PASS
+}
+
 model NFT {
   id                String   @id @default(uuid()) @db.Uuid
-  songId            String   @db.Uuid
+  creatorId         String?  @db.Uuid
   ownerId           String   @db.Uuid
+  songId            String   @db.Uuid
+  tokenId           String?
+  contractAddress   String?
+  metadataUrl       String?
   price             Decimal
+  nftType           NftType  @default(SONG)
   royaltyPercentage Int      @default(0)
+  status            String   @default("MINTED") // "MINTED", "SOLD", "LISTED", "AUCTION"
+  auctionEndTime    DateTime?
+  highestBid        Decimal?
+  highestBidderId   String?  @db.Uuid
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
   song      Song      @relation(fields: [songId], references: [id], onDelete: Cascade)
   owner     User      @relation(fields: [ownerId], references: [id], onDelete: Restrict)
   royalties Royalty[]
+
+  @@index([ownerId])
+  @@index([songId])
 }
 
 model Royalty {
-  id        String    @id @default(uuid()) @db.Uuid
-  nftId     String    @db.Uuid
-  artistId  String    @db.Uuid
-  amount    Decimal
-  paidAt    DateTime?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id              String    @id @default(uuid()) @db.Uuid
+  nftId           String    @db.Uuid
+  artistId        String    @db.Uuid
+  percentage      Int?
+  amount          Decimal
+  transactionHash String?
+  paidAt          DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   nft    NFT  @relation(fields: [nftId], references: [id], onDelete: Cascade)
   artist User @relation(fields: [artistId], references: [id], onDelete: Cascade)
@@ -143,17 +287,250 @@ model Vote {
 }
 
 model Transaction {
-  id         String          @id @default(uuid()) @db.Uuid
-  senderId   String          @db.Uuid
-  receiverId String          @db.Uuid
-  amount     Decimal
-  type       TransactionType
-  createdAt  DateTime        @default(now())
-  updatedAt  DateTime        @updatedAt
+  id             String          @id @default(uuid()) @db.Uuid
+  userId         String?         @db.Uuid
+  senderId       String          @db.Uuid
+  receiverId     String          @db.Uuid
+  amount         Decimal
+  currency       Currency        @default(MUSIC)
+  paymentGateway PaymentGateway  @default(SYSTEM)
+  type           TransactionType
+  status         String          @default("COMPLETED")
+  blockchainHash String?
+  invoiceId      String?
+  invoiceUrl     String?
+  fraudScore     Int             @default(0)
+  isFlagged      Boolean         @default(false)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
 
+  user     User?  @relation("UserTransactions", fields: [userId], references: [id], onDelete: SetNull)
   sender   Wallet @relation("SenderWallet", fields: [senderId], references: [id], onDelete: Cascade)
   receiver Wallet @relation("ReceiverWallet", fields: [receiverId], references: [id], onDelete: Cascade)
 
   @@index([senderId, createdAt])
   @@index([receiverId, createdAt])
+}
+
+model FanToken {
+  id            String   @id @default(uuid()) @db.Uuid
+  userId        String   @db.Uuid
+  tokenBalance  Decimal  @default(0)
+  stakedAmount  Decimal  @default(0)
+  rewardAmount  Decimal  @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ProductionContract {
+  id                String   @id @default(uuid()) @db.Uuid
+  productionHouseId String   @db.Uuid
+  artistId          String   @db.Uuid
+  revenueSplit      Int
+  royaltySplit      Int
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  productionHouse User @relation("ContractProductionHouse", fields: [productionHouseId], references: [id], onDelete: Cascade)
+  artist          User @relation("ContractArtist", fields: [artistId], references: [id], onDelete: Cascade)
+
+  @@unique([productionHouseId, artistId])
+}
+
+model SmartContractSplit {
+  id                String   @id @default(uuid()) @db.Uuid
+  contractName      String
+  totalRevenue      Decimal  @default(0)
+  
+  artistId          String   @db.Uuid
+  artistPercentage  Int      @default(0)
+  
+  producerId        String?  @db.Uuid
+  producerPercentage Int     @default(0)
+  
+  labelId           String?  @db.Uuid
+  labelPercentage   Int      @default(0)
+  
+  productionHouseId String?  @db.Uuid
+  productionHousePercentage Int @default(0)
+  
+  organizerId       String?  @db.Uuid
+  organizerPercentage Int    @default(0)
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  artist          User  @relation("SplitArtist", fields: [artistId], references: [id], onDelete: Restrict)
+  producer        User? @relation("SplitProducer", fields: [producerId], references: [id], onDelete: SetNull)
+  label           User? @relation("SplitLabel", fields: [labelId], references: [id], onDelete: SetNull)
+  productionHouse User? @relation("SplitProductionHouse", fields: [productionHouseId], references: [id], onDelete: SetNull)
+  organizer       User? @relation("SplitOrganizer", fields: [organizerId], references: [id], onDelete: SetNull)
+}
+
+model FanClubDiscussion {
+  id        String   @id @default(uuid()) @db.Uuid
+  artistId  String   @db.Uuid
+  fanId     String   @db.Uuid
+  message   String   @db.Text
+  createdAt DateTime @default(now())
+
+  artist    User     @relation("FanClubArtist", fields: [artistId], references: [id], onDelete: Cascade)
+  fan       User     @relation("FanClubMember", fields: [fanId], references: [id], onDelete: Cascade)
+}
+
+model Poll {
+  id        String       @id @default(uuid()) @db.Uuid
+  artistId  String       @db.Uuid
+  question  String
+  createdAt DateTime     @default(now())
+  
+  artist    User         @relation("ArtistPolls", fields: [artistId], references: [id], onDelete: Cascade)
+  options   PollOption[]
+}
+
+model PollOption {
+  id        String   @id @default(uuid()) @db.Uuid
+  pollId    String   @db.Uuid
+  text      String
+  votes     Int      @default(0)
+
+  poll      Poll     @relation(fields: [pollId], references: [id], onDelete: Cascade)
+}
+
+model ExclusiveContent {
+  id             String   @id @default(uuid()) @db.Uuid
+  artistId       String   @db.Uuid
+  title          String
+  contentUrl     String
+  isPremiumOnly  Boolean  @default(true)
+  contentType    String   @default("MEET_AND_GREET") // "MEET_AND_GREET", "EXCLUSIVE_TRACK", "BEHIND_SCENES"
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  artist         User     @relation("ArtistExclusiveContent", fields: [artistId], references: [id], onDelete: Cascade)
+}
+
+model OTP {
+  id        String   @id @default(uuid()) @db.Uuid
+  email     String   @unique
+  code      String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  adminId   String   @db.Uuid
+  action    String
+  targetId  String?  @db.Uuid
+  details   String?  @db.Text
+  createdAt DateTime @default(now())
+
+  admin     User     @relation("AdminAuditLogs", fields: [adminId], references: [id], onDelete: Restrict)
+}
+
+model CommunityEndorsement {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  artistId  String   @db.Uuid
+  createdAt DateTime @default(now())
+
+  user   User   @relation("UserEndorsements", fields: [userId], references: [id], onDelete: Cascade)
+  artist Artist @relation("ArtistEndorsements", fields: [artistId], references: [userId], onDelete: Cascade)
+
+  @@unique([userId, artistId])
+  @@index([artistId])
+}
+
+model Notification {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model MultiSigOwner {
+  id        String   @id @default(uuid()) @db.Uuid
+  walletId  String   @db.Uuid
+  userId    String   @db.Uuid
+  createdAt DateTime @default(now())
+
+  wallet    Wallet   @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  user      User     @relation("UserMultiSig", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([walletId, userId])
+}
+
+model SmartContractAudit {
+  id              String   @id @default(uuid()) @db.Uuid
+  contractAddress String   @unique
+  auditorName     String
+  passed          Boolean  @default(true)
+  reportUrl       String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model SystemHealth {
+  id        String           @id @default(uuid()) @db.Uuid
+  type      SystemHealthType
+  status    String           @default("HEALTHY") // "HEALTHY", "WARNING", "CRITICAL"
+  resolved  Boolean          @default(true)
+  details   String?          @db.Text
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+}
+
+model MultiSigRequest {
+  id             String   @id @default(uuid()) @db.Uuid
+  proposerId     String   @db.Uuid
+  walletId       String   @db.Uuid
+  targetAddress  String
+  amount         Decimal
+  status         String   @default("PENDING") // PENDING, APPROVED, EXECUTED, REJECTED
+  approvalsCount Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  proposer       User     @relation(fields: [proposerId], references: [id], onDelete: Cascade)
+}
+
+model PlatformConfig {
+  id                        String   @id @default("GLOBAL_CONFIG")
+  ticketCommissionPercent   Decimal  @default(5.0)
+  nftMarketplaceFeePercent  Decimal  @default(2.5)
+  stakingFeePercent         Decimal  @default(1.0)
+  premiumListingFee         Decimal  @default(100.0)
+  artistVerificationFee     Decimal  @default(50.0)
+  updatedAt                 DateTime @updatedAt
+}
+
+model Subscription {
+  id               String   @id @default(uuid()) @db.Uuid
+  userId           String   @db.Uuid
+  planType         String   @default("PREMIUM")
+  status           String   @default("ACTIVE")
+  currentPeriodEnd DateTime
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Advertisement {
+  id          String   @id @default(uuid()) @db.Uuid
+  sponsorId   String   @db.Uuid
+  eventId     String?  @db.Uuid
+  amountPaid  Decimal
+  status      String   @default("ACTIVE")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  sponsor     User     @relation(fields: [sponsorId], references: [id], onDelete: Restrict)
+  event       Event?   @relation(fields: [eventId], references: [id], onDelete: SetNull)
 }

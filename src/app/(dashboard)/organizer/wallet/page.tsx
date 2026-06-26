@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { getWalletAction, getTransactionHistoryAction, transferCoinsAction } from "@/features/wallet/wallet.actions"
+import { getWalletAction, transferCoinsAction } from "@/features/wallet/wallet.actions"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -26,7 +26,6 @@ interface WalletData {
 
 export default function OrganizerWallet() {
   const [wallet, setWallet] = useState<WalletData | null>(null)
-  const [transactions, setTransactions] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
   const [receiverEmail, setReceiverEmail] = useState("")
   const [transferAmount, setTransferAmount] = useState("")
@@ -34,12 +33,8 @@ export default function OrganizerWallet() {
   const [transferring, setTransferring] = useState(false)
 
   useEffect(() => {
-    Promise.all([
-      getWalletAction(),
-      getTransactionHistoryAction(1, 50),
-    ]).then(([walletRes, txRes]) => {
+    getWalletAction().then((walletRes) => {
       if (walletRes.success) setWallet(walletRes.data as unknown as WalletData)
-      if (txRes.success) setTransactions((txRes.data as unknown as { data: Transaction[] }).data)
       setLoading(false)
     })
   }, [])

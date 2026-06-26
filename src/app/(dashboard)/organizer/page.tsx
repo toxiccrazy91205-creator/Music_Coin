@@ -2,95 +2,154 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { getEventsAction } from "@/features/events/events.actions"
+import { useAuth } from "@/hooks/useAuth"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Calendar, Plus } from "lucide-react"
+import { Calendar, Plus, Ticket, DollarSign, Activity } from "lucide-react"
 
-interface EventSummary {
-  id: string
-  title: string
-  status: string
-  date: string
+interface DashboardData {
+  totalEvents: number
+  published: number
+  drafts: number
+  ticketsSold: number
+  totalRevenue: number
+  recentEvents: {
+    id: string
+    title: string
+    status: string
+    eventDate: string
+  }[]
 }
 
 export default function OrganizerOverview() {
-  const [events, setEvents] = useState<EventSummary[]>([])
+  const { user } = useAuth()
+  const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    getEventsAction().then((res) => {
-      if (res.success) setEvents(res.data as unknown as EventSummary[])
-      setLoading(false)
-    })
-  }, [])
+    async function fetchDashboard() {
+      try {
+        const response = await fetch("/api/organizer/dashboard")
+        if (response.ok) {
+          const json = await response.json()
+          if (json.success) setData(json.data)
+        }
+      } catch (err) {
+        console.error("Failed to fetch dashboard", err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    if (user?.role === "ORGANIZER") fetchDashboard()
+  }, [user])
 
-  const published = events.filter((e) => e.status === "PUBLISHED").length
-  const drafts = events.filter((e) => e.status === "DRAFT").length
-
-  if (loading) return <p className="text-muted-foreground">Loading...</p>
+  if (!user || user.role !== "ORGANIZER") return null
+  if (loading) return <div className="animate-pulse">Loading dashboard...</div>
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Organizer Dashboard</h1>
-        <Link href="/dashboard/organizer/events/new">
-          <Button>
-            <Plus className="mr-1 size-4" />
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Organizer Dashboard</h1>
+          <p className="text-muted-foreground mt-1">Manage your events, track sales, and monitor revenue.</p>
+        </div>
+        <Link href="/organizer/events/new">
+          <Button className="bg-primary hover:bg-primary/90 shadow-md">
+            <Plus className="mr-2 h-4 w-4" />
             Create Event
           </Button>
         </Link>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">Total Events</CardTitle>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card className="bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border-indigo-500/20">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+            <DollarSign className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">{events.length}</p>
+            <div className="text-2xl font-bold text-indigo-700 dark:text-indigo-300">{data?.totalRevenue.toLocaleString()} MC</div>
+            <p className="text-xs text-muted-foreground mt-1">From ticket sales</p>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">Published</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Tickets Sold</CardTitle>
+            <Ticket className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold text-green-600">{published}</p>
+            <div className="text-2xl font-bold">{data?.ticketsSold}</div>
+            <p className="text-xs text-muted-foreground mt-1">Across all events</p>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">Drafts</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Active Events</CardTitle>
+            <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold text-amber-600">{drafts}</p>
+            <div className="text-2xl font-bold text-green-600 dark:text-green-400">{data?.published}</div>
+            <p className="text-xs text-muted-foreground mt-1">Currently published</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Drafts</CardTitle>
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-amber-600 dark:text-amber-500">{data?.drafts}</div>
+            <p className="text-xs text-muted-foreground mt-1">Pending publication</p>
           </CardContent>
         </Card>
       </div>
 
-      {events.length > 0 && (
+      {data && data.recentEvents.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle>Recent Events</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
-              {events.slice(0, 5).map((event) => (
-                <Link
-                  key={event.id}
-                  href={"/dashboard/organizer/events"}
-                  className="flex items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-muted"
-                >
-                  <Calendar className="size-4 text-muted-foreground" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">{event.title}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {event.status === "PUBLISHED" ? "Published" : event.status === "DRAFT" ? "Draft" : event.status}
-                    </p>
-                  </div>
-                </Link>
-              ))}
+            <div className="rounded-md border overflow-x-auto">
+              <table className="w-full text-sm text-left">
+                <thead className="bg-muted/50 text-muted-foreground uppercase text-xs">
+                  <tr>
+                    <th className="px-6 py-4 font-medium">Event Name</th>
+                    <th className="px-6 py-4 font-medium">Date</th>
+                    <th className="px-6 py-4 font-medium">Status</th>
+                    <th className="px-6 py-4 font-medium text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {data.recentEvents.map((event) => (
+                    <tr key={event.id} className="hover:bg-muted/20 transition-colors bg-card">
+                      <td className="px-6 py-4 font-medium">
+                        <div className="flex items-center gap-3">
+                          <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                            <Calendar className="h-4 w-4 text-primary" />
+                          </div>
+                          {event.title}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-muted-foreground">{new Date(event.eventDate).toLocaleDateString()}</td>
+                      <td className="px-6 py-4">
+                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                          event.status === "PUBLISHED" ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" :
+                          event.status === "CANCELLED" ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400" :
+                          "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400"
+                        }`}>
+                          {event.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <Link href="/organizer/events">
+                          <Button variant="outline" size="sm">Manage</Button>
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </CardContent>
         </Card>

@@ -3,13 +3,14 @@
 import { WalletService } from "@/features/wallet/wallet.service"
 import { getSession } from "@/lib/auth/session"
 import { Prisma } from "@prisma/client"
+import { serialize } from "@/lib/serialize"
 
 export async function getWalletAction() {
   try {
     const session = await getSession()
     if (!session) return { success: false as const, error: "Not authenticated" }
     const wallet = await WalletService.getWallet(session.sub)
-    return { success: true as const, data: wallet }
+    return { success: true as const, data: serialize(wallet) }
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Something went wrong"
     return { success: false as const, error: message }
@@ -21,7 +22,7 @@ export async function getTransactionHistoryAction(page = 1, limit = 20) {
     const session = await getSession()
     if (!session) return { success: false as const, error: "Not authenticated" }
     const result = await WalletService.getTransactions(session.sub, page, limit)
-    return { success: true as const, data: result }
+    return { success: true as const, data: serialize(result) }
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Something went wrong"
     return { success: false as const, error: message }
@@ -52,7 +53,7 @@ export async function transferCoinsAction(receiverEmail: string, amount: number)
       decimalAmount,
     )
 
-    return { success: true as const, data: transaction }
+    return { success: true as const, data: serialize(transaction) }
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Something went wrong"
     return { success: false as const, error: message }

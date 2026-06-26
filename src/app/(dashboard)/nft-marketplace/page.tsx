@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState } from "react"
 import { getNftsAction, buyNftAction } from "@/features/nfts/nft.actions"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -22,13 +22,19 @@ export default function NftMarketplace() {
   const [buyingId, setBuyingId] = useState<string | null>(null)
   const [error, setError] = useState("")
 
-  const loadNfts = useCallback(async () => {
+  async function loadNfts() {
     const res = await getNftsAction()
     if (res.success) setNfts(res.data as unknown as NftItem[])
     setLoading(false)
-  }, [])
+  }
 
-  useEffect(() => { loadNfts() }, [loadNfts])
+  useEffect(() => {
+    let mounted = true
+    loadNfts().then(() => {
+      if (!mounted) return
+    })
+    return () => { mounted = false }
+  }, [loadNfts])
 
   async function handleBuy(nftId: string) {
     setError("")

@@ -1,3 +1,5 @@
-export default function NFTsPage() {
-  return <div>NFTs Page</div>
+import { redirect } from "next/navigation"
+
+export default function NftsRedirect() {
+  redirect("/artist/nfts")
 }
