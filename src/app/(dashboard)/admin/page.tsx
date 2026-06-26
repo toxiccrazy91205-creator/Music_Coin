@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Users, UserCheck, Calendar, Ticket, ImageIcon, Banknote, ShieldAlert, BarChart3, Database } from "lucide-react"
+import { FadeIn } from "@/components/ui/fade-in"
+import { ScaleOnHover } from "@/components/ui/scale-on-hover"
 
 interface AnalyticsData {
   totalRegisteredUsers: number
@@ -52,18 +54,20 @@ export default function AdminDashboardPage() {
           ))}
         </div>
       ) : data ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <MetricCard title="Total Users" value={data.totalRegisteredUsers} icon={Users} />
-          <MetricCard title="Verified Artists" value={data.verifiedArtists} icon={UserCheck} />
-          <MetricCard title="Events Created" value={data.eventsCreated} icon={Calendar} />
-          <MetricCard title="Tickets Sold" value={data.ticketsSold} icon={Ticket} />
-          <MetricCard title="NFT Volume" value={data.nftVolume} icon={ImageIcon} />
-          <MetricCard title="Royalty Payments" value={data.royaltyPaymentsProcessed} icon={Banknote} />
-          <MetricCard title="Active Communities" value={data.activeFanCommunities} icon={Users} />
-          <MetricCard title="Monthly Revenue" value={`${data.monthlyRevenue} MC`} icon={BarChart3} />
-          <MetricCard title="Staking TVL" value={`${data.stakingTVL} MC`} icon={Database} />
-          <MetricCard title="User Retention" value={data.userRetention} icon={ShieldAlert} />
-        </div>
+        <FadeIn>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <MetricCard title="Total Users" value={data.totalRegisteredUsers} icon={Users} />
+            <MetricCard title="Verified Artists" value={data.verifiedArtists} icon={UserCheck} />
+            <MetricCard title="Events Created" value={data.eventsCreated} icon={Calendar} />
+            <MetricCard title="Tickets Sold" value={data.ticketsSold} icon={Ticket} />
+            <MetricCard title="NFT Volume" value={data.nftVolume} icon={ImageIcon} />
+            <MetricCard title="Royalty Payments" value={data.royaltyPaymentsProcessed} icon={Banknote} />
+            <MetricCard title="Active Communities" value={data.activeFanCommunities} icon={Users} />
+            <MetricCard title="Monthly Revenue" value={`${data.monthlyRevenue} MC`} icon={BarChart3} />
+            <MetricCard title="Staking TVL" value={`${data.stakingTVL} MC`} icon={Database} />
+            <MetricCard title="User Retention" value={data.userRetention} icon={ShieldAlert} />
+          </div>
+        </FadeIn>
       ) : (
         <p className="text-muted-foreground">Failed to load platform analytics.</p>
       )}
@@ -73,7 +77,8 @@ export default function AdminDashboardPage() {
 
 function MetricCard({ title, value, icon: Icon }: { title: string; value: string | number; icon: any }) {
   return (
-    <Card>
+    <ScaleOnHover>
+      <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
         <Icon className="h-4 w-4 text-muted-foreground" />
@@ -82,5 +87,6 @@ function MetricCard({ title, value, icon: Icon }: { title: string; value: string
         <div className="text-2xl font-bold">{value}</div>
       </CardContent>
     </Card>
+    </ScaleOnHover>
   )
 }
