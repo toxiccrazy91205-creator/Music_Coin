@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { FileText, Users, DollarSign, Activity, ArrowRight, Bell, TrendingUp, Wallet } from "lucide-react"
+import { toast } from "sonner"
 
 interface DashboardData {
   totalContracts: number
@@ -27,7 +28,7 @@ export default function PHDashboard() {
         const res = await fetch("/api/production-house/dashboard")
         const json = await res.json()
         if (json.success) setData(json.data)
-      } catch {} finally {
+      } catch { toast.error("Failed to load dashboard") } finally {
         setLoading(false)
       }
     }

@@ -76,7 +76,6 @@ export default function FanDashboardPage() {
           recentActivity
         })
       } catch (error) {
-        console.error("Dashboard load error:", error)
       } finally {
         setLoading(false)
       }

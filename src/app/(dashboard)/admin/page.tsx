@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Users, UserCheck, Calendar, Ticket, ImageIcon, Banknote, ShieldAlert, BarChart3, Database } from "lucide-react"
 import { FadeIn } from "@/components/ui/fade-in"
 import { ScaleOnHover } from "@/components/ui/scale-on-hover"
+import { toast } from "sonner"
 
 interface AnalyticsData {
   totalRegisteredUsers: number
@@ -30,7 +31,7 @@ export default function AdminDashboardPage() {
         if (json.success) setData(json.data)
         setLoading(false)
       })
-      .catch(() => setLoading(false))
+      .catch(() => { setLoading(false); toast.error("Failed to load analytics") })
   }, [])
 
   return (

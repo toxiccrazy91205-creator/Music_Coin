@@ -1,11 +1,12 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { getNftsAction, buyNftAction } from "@/features/nfts/nft.actions"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Music, ShoppingCart, User } from "lucide-react"
 import { useAuth } from "@/hooks/useAuth"
+import { toast } from "sonner"
 
 interface NftItem {
   id: string
@@ -22,11 +23,15 @@ export default function NftMarketplace() {
   const [buyingId, setBuyingId] = useState<string | null>(null)
   const [error, setError] = useState("")
 
-  async function loadNfts() {
-    const res = await getNftsAction()
-    if (res.success) setNfts(res.data as unknown as NftItem[])
+  const loadNfts = useCallback(async () => {
+    try {
+      const res = await getNftsAction()
+      if (res.success) setNfts(res.data as unknown as NftItem[])
+    } catch {
+      toast.error("Failed to load NFTs")
+    }
     setLoading(false)
-  }
+  }, [])
 
   useEffect(() => {
     let mounted = true

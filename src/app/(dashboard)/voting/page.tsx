@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Vote, Trophy, Star, Music } from "lucide-react"
+import { toast } from "sonner"
 
 interface VoteResult {
   artistId: string
@@ -30,7 +31,7 @@ export default function VotingPage() {
       const res = await fetch("/api/vote/results")
       const json = await res.json()
       if (json.success) setResults(json.data)
-    } catch {}
+    } catch { toast.error("Failed to load results") }
   }
 
   useEffect(() => {
@@ -39,7 +40,7 @@ export default function VotingPage() {
         const res = await fetch("/api/artists")
         const json = await res.json()
         if (json.success) setArtists(json.data || [])
-      } catch {}
+      } catch { toast.error("Failed to load artists") }
       await loadResults()
       setLoading(false)
     }
