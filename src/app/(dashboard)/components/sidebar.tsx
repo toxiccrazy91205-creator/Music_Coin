@@ -34,12 +34,16 @@ import {
   Bell,
   PlusCircle,
   MessageCircle,
-  FileText
+  FileText,
+  ChevronLeft,
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { useState } from "react"
 import type { UserRole } from "@/types"
+import { FadeIn } from "@/components/ui/fade-in"
+import { ScaleOnHover } from "@/components/ui/scale-on-hover"
+import { ThemeToggle } from "@/components/ui/theme-toggle"
 
 interface NavItem {
   href: string
@@ -116,6 +120,7 @@ export function Sidebar() {
   const router = useRouter()
   const { user, logout } = useAuth()
   const [open, setOpen] = useState(false)
+  const [collapsed, setCollapsed] = useState(false)
 
   const visibleItems = user ? roleNav[user.role] || [] : []
 
@@ -129,68 +134,95 @@ export function Sidebar() {
         {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
       </button>
 
-      <aside
-        className={cn(
-          "fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r bg-card transition-transform duration-200",
-          open ? "translate-x-0" : "-translate-x-full",
-          "lg:translate-x-0",
-        )}
-      >
-        <div className="flex h-16 items-center gap-2 border-b px-6">
-          <Music className="h-6 w-6 text-primary" />
-          <span className="text-lg font-bold">Music Coin Festival</span>
-        </div>
-
-        {user && (
-          <div className="border-b px-6 py-4">
-            <p className="text-sm font-medium truncate">{user.name}</p>
-            <p className="text-xs text-muted-foreground truncate">{user.email}</p>
-            <span className="mt-1 inline-block rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
-              {ROLE_LABELS[user.role]}
-            </span>
+      <FadeIn>
+        <aside
+          className={cn(
+            "fixed inset-y-0 left-0 z-40 flex flex-col border-r bg-card transition-all duration-300",
+            collapsed ? "w-16" : "w-64",
+            open ? "translate-x-0" : "-translate-x-full",
+            "lg:translate-x-0",
+          )}
+        >
+          <div className={cn("flex h-16 items-center border-b", collapsed ? "justify-center px-2" : "gap-2 px-6")}>
+            <Music className="h-6 w-6 text-primary shrink-0" />
+            {!collapsed && (
+              <>
+                <span className="text-lg font-bold truncate">Music Coin Festival</span>
+                <div className="ml-auto">
+                  <ThemeToggle />
+                </div>
+              </>
+            )}
+            {collapsed && (
+              <div className="absolute -right-3 top-4">
+                <ThemeToggle />
+              </div>
+            )}
           </div>
-        )}
 
-        <nav className="flex-1 space-y-1 px-3 py-4">
-          {visibleItems.map((item) => {
-            const Icon = item.icon
-            const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href))
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setOpen(false)}
-                className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                  isActive
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
-                )}
-              >
-                <Icon className="h-4 w-4" />
-                {item.label}
-              </Link>
-            )
-          })}
-        </nav>
+          {user && !collapsed && (
+            <div className="border-b px-6 py-4">
+              <p className="text-sm font-medium truncate">{user.name}</p>
+              <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+              <span className="mt-1 inline-block rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
+                {ROLE_LABELS[user.role]}
+              </span>
+            </div>
+          )}
 
-        <Separator />
+          <nav className="flex-1 space-y-1 px-3 py-4">
+            {visibleItems.map((item) => {
+              const Icon = item.icon
+              const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href))
+              return (
+                <ScaleOnHover key={item.href} scale={1.03}>
+                  <Link
+                    href={item.href}
+                    onClick={() => setOpen(false)}
+                    className={cn(
+                      "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                      collapsed && "justify-center px-2",
+                      isActive
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                    )}
+                    title={collapsed ? item.label : undefined}
+                  >
+                    <Icon className="h-4 w-4 shrink-0" />
+                    {!collapsed && <span className="truncate">{item.label}</span>}
+                  </Link>
+                </ScaleOnHover>
+              )
+            })}
+          </nav>
 
-        <div className="p-4">
-          <Button
-            variant="outline"
-            className="w-full justify-start gap-2"
-            onClick={async () => {
-              await logout()
-              setOpen(false)
-              router.replace("/login")
-            }}
+          <Separator />
+
+          <div className={cn("p-4", collapsed && "px-2")}>
+            <Button
+              variant="outline"
+              className={cn("gap-2", collapsed ? "w-12 justify-center px-0" : "w-full justify-start")}
+              onClick={async () => {
+                await logout()
+                setOpen(false)
+                router.replace("/login")
+              }}
+              title={collapsed ? "Logout" : undefined}
+            >
+              <LogOut className="h-4 w-4 shrink-0" />
+              {!collapsed && "Logout"}
+            </Button>
+          </div>
+
+          <button
+            onClick={() => setCollapsed(!collapsed)}
+            className="hidden lg:flex absolute -right-3 top-20 h-6 w-6 items-center justify-center rounded-full border bg-card text-muted-foreground hover:text-foreground transition-colors"
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
-            <LogOut className="h-4 w-4" />
-            Logout
-          </Button>
-        </div>
-      </aside>
+            <ChevronLeft className={cn("h-3 w-3 transition-transform", collapsed && "rotate-180")} />
+          </button>
+        </aside>
+      </FadeIn>
 
       {open && (
         <div className="fixed inset-0 z-30 bg-black/50 lg:hidden" onClick={() => setOpen(false)} />
