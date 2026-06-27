@@ -36,6 +36,7 @@ import {
   MessageCircle,
   FileText,
   ChevronLeft,
+  Heart,
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
@@ -53,17 +54,16 @@ interface NavItem {
 
 const roleNav: Record<UserRole, NavItem[]> = {
   ADMIN: [
-    { href: "/admin", label: "Overview", icon: LayoutDashboard },
+    { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
     { href: "/admin/users", label: "User Management", icon: Users },
-    { href: "/admin/artists/verification", label: "Verification", icon: UserCheck },
-    { href: "/admin/events/moderation", label: "Event Moderation", icon: ShieldAlert },
-    { href: "/admin/nfts", label: "NFT Monitoring", icon: Activity },
-    { href: "/admin/transactions", label: "Transactions", icon: ListOrdered },
-    { href: "/admin/revenue", label: "Revenue Reports", icon: DollarSign },
-    { href: "/admin/security", label: "Security", icon: Shield },
-    { href: "/admin/analytics", label: "Analytics", icon: PieChart },
-    { href: "/admin/system/health", label: "System Health", icon: Server },
-    { href: "/admin/ai", label: "AI Dashboard", icon: Bot },
+    { href: "/admin/artists/verification", label: "Artist Verification", icon: UserCheck },
+    { href: "/admin/events/moderation", label: "Event Management", icon: Calendar },
+    { href: "/admin/production-houses", label: "Production House Management", icon: Users },
+    { href: "/admin/nfts", label: "NFT Management", icon: ImageIcon },
+    { href: "/admin/royalties", label: "Royalty Management", icon: DollarSign },
+    { href: "/admin/tokens", label: "Token Management", icon: Music },
+    { href: "/admin/revenue", label: "Reports", icon: FileText },
+    { href: "/admin/analytics", label: "Platform Analytics", icon: PieChart },
     { href: "/admin/settings", label: "Settings", icon: Settings },
     { href: "/wallet", label: "My Wallet", icon: Wallet },
   ],
@@ -73,6 +73,8 @@ const roleNav: Record<UserRole, NavItem[]> = {
     { href: "/organizer/events/new", label: "Create Event", icon: PlusCircle },
     { href: "/organizer/tickets", label: "Ticket Management", icon: Ticket },
     { href: "/organizer/attendance", label: "Attendance", icon: QrCode },
+    { href: "/organizer/crowdfunding", label: "Crowdfunding", icon: DollarSign },
+    { href: "/organizer/live-streams", label: "Live Streams", icon: Activity },
     { href: "/organizer/analytics", label: "Analytics", icon: BarChart3 },
     { href: "/organizer/payments", label: "Payments", icon: DollarSign },
     { href: "/organizer/artists", label: "Artist Management", icon: Mic2 },
@@ -87,6 +89,7 @@ const roleNav: Record<UserRole, NavItem[]> = {
     { href: "/artist/royalties", label: "Royalties", icon: DollarSign },
     { href: "/artist/fans", label: "Fan Management", icon: Users },
     { href: "/artist/community", label: "Community", icon: MessageCircle },
+    { href: "/artist/support", label: "Support Hub", icon: Heart },
     { href: "/artist/analytics", label: "Analytics", icon: BarChart3 },
     { href: "/artist/wallet", label: "Wallet", icon: Wallet },
     { href: "/artist/notifications", label: "Notifications", icon: Bell },
@@ -110,6 +113,7 @@ const roleNav: Record<UserRole, NavItem[]> = {
     { href: "/fan/wallet", label: "Wallet", icon: Wallet },
     { href: "/fan/token", label: "MusicCoin Token", icon: Music },
     { href: "/fan/community", label: "Community", icon: Users },
+    { href: "/fan/subscriptions", label: "Subscriptions", icon: Heart },
     { href: "/fan/notifications", label: "Notifications", icon: Bell },
     { href: "/voting", label: "Voting", icon: Vote },
   ],
@@ -171,29 +175,33 @@ export function Sidebar() {
           )}
 
           <nav className="flex-1 space-y-1 px-3 py-4">
-            {visibleItems.map((item) => {
-              const Icon = item.icon
-              const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href))
-              return (
-                <ScaleOnHover key={item.href} scale={1.03}>
-                  <Link
-                    href={item.href}
-                    onClick={() => setOpen(false)}
-                    className={cn(
-                      "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                      collapsed && "justify-center px-2",
-                      isActive
-                        ? "bg-primary text-primary-foreground"
-                        : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
-                    )}
-                    title={collapsed ? item.label : undefined}
-                  >
-                    <Icon className="h-4 w-4 shrink-0" />
-                    {!collapsed && <span className="truncate">{item.label}</span>}
-                  </Link>
-                </ScaleOnHover>
+            {(() => {
+              const activeItem = [...visibleItems]
+                .sort((a, b) => b.href.length - a.href.length)
+                .find((item) => pathname === item.href || pathname.startsWith(item.href + "/"))
+
+              return visibleItems.map((item) => {
+                const Icon = item.icon
+                const isActive = activeItem ? activeItem.href === item.href : pathname === item.href
+                return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setOpen(false)}
+                  className={cn(
+                    "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200",
+                    collapsed && "justify-center px-2",
+                    isActive
+                      ? "bg-primary text-primary-foreground shadow-sm hover:bg-primary/90"
+                      : "text-muted-foreground hover:bg-accent hover:text-accent-foreground hover:translate-x-1",
+                  )}
+                  title={collapsed ? item.label : undefined}
+                >
+                  <Icon className={cn("h-4 w-4 shrink-0 transition-transform duration-200", !isActive && "group-hover:scale-110")} />
+                  {!collapsed && <span className="truncate">{item.label}</span>}
+                </Link>
               )
-            })}
+            })})()}
           </nav>
 
           <Separator />
@@ -201,7 +209,10 @@ export function Sidebar() {
           <div className={cn("p-4", collapsed && "px-2")}>
             <Button
               variant="outline"
-              className={cn("gap-2", collapsed ? "w-12 justify-center px-0" : "w-full justify-start")}
+              className={cn(
+                "group gap-2 transition-all duration-200 hover:bg-destructive hover:text-destructive-foreground hover:border-destructive",
+                collapsed ? "w-12 justify-center px-0" : "w-full justify-start"
+              )}
               onClick={async () => {
                 await logout()
                 setOpen(false)
@@ -209,7 +220,7 @@ export function Sidebar() {
               }}
               title={collapsed ? "Logout" : undefined}
             >
-              <LogOut className="h-4 w-4 shrink-0" />
+              <LogOut className="h-4 w-4 shrink-0 transition-transform duration-200 group-hover:scale-110" />
               {!collapsed && "Logout"}
             </Button>
           </div>

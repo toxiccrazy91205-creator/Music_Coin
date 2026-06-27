@@ -11,6 +11,28 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U musiccoin -d music_coin_demo"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: music-coin-app
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://musiccoin:musiccoin_pass@postgres:5432/music_coin_demo?schema=public
+      - NODE_ENV=production
+      # Pass existing Firebase/JWT vars (if using .env file, docker-compose automatically loads them, but we explicitly map the essential ones or let docker pick up .env)
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
 
 volumes:
   pgdata:
