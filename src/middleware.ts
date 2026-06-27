@@ -52,11 +52,12 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // 0. SSL/TLS Enforcement (Data in Transit)
-  if (process.env.NODE_ENV === "production" && request.headers.get("x-forwarded-proto") !== "https") {
-    const secureUrl = new URL(request.url)
-    secureUrl.protocol = "https:"
-    return NextResponse.redirect(secureUrl, 301)
-  }
+  // Disabled for EC2 IP testing
+  // if (process.env.NODE_ENV === "production" && request.headers.get("x-forwarded-proto") !== "https") {
+  //   const secureUrl = new URL(request.url)
+  //   secureUrl.protocol = "https:"
+  //   return NextResponse.redirect(secureUrl, 301)
+  // }
 
   const isApi = pathname.startsWith("/api")
 
