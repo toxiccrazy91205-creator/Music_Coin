@@ -21,7 +21,7 @@ services:
     container_name: music-coin-app-dev
     working_dir: /app
     command: >
-      sh -c "corepack enable pnpm && pnpm i && pnpm run dev"
+      sh -c "corepack enable pnpm && pnpm i && npx prisma generate && npx prisma db push && npx prisma db seed && pnpm run dev"
     ports:
       - "3000:3000"
     volumes:
@@ -31,6 +31,7 @@ services:
     environment:
       - DATABASE_URL=postgresql://musiccoin:musiccoin_pass@postgres:5432/music_coin_demo?schema=public
       - NODE_ENV=development
+      - WATCHPACK_POLLING=true
     env_file:
       - .env
     depends_on:
