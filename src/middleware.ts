@@ -107,12 +107,13 @@ export async function middleware(request: NextRequest) {
     
     // Relaxed CSRF for Demo: If origin is completely missing (like curl/postman testing), we allow it.
     // If it is present, it MUST match our trusted domain.
-    if (origin && !origin.includes("musiccoin.demo") && !origin.includes("localhost")) {
-       return new NextResponse(JSON.stringify({ error: "CSRF Forbidden" }), { 
-         status: 403, 
-         headers: { "Content-Type": "application/json" }
-       })
-    }
+    // Disabled for EC2 raw IP testing since the origin won't be musiccoin.demo or localhost
+    // if (origin && !origin.includes("musiccoin.demo") && !origin.includes("localhost")) {
+    //    return new NextResponse(JSON.stringify({ error: "CSRF Forbidden" }), { 
+    //      status: 403, 
+    //      headers: { "Content-Type": "application/json" }
+    //    })
+    // }
     
     // Strict browser fetch-site check
     if (fetchSite && fetchSite === "cross-site") {
