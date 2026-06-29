@@ -2,28 +2,30 @@ import { NextResponse, type NextRequest } from "next/server"
 import { jwtVerify } from "jose"
 import { UserRole, ROLE_LEVELS } from "@/types"
 
-const PUBLIC_ROUTES = [
+const EXACT_PUBLIC_ROUTES = [
   "/",
   "/login",
   "/register",
   "/forgot-password",
-  "/api/auth/",
-  "/api/events",
-  "/api/nfts",
-  "/_next/static/",
-  "/_next/image/",
   "/favicon.ico",
   "/events",
   "/nft-marketplace",
 ]
 
+const PREFIX_PUBLIC_ROUTES = [
+  "/api/auth/",
+  "/api/events",
+  "/api/nfts",
+  "/_next/static/",
+  "/_next/image/",
+]
+
 const ROUTE_LEVELS: Record<string, number> = {
   "/admin": ROLE_LEVELS[UserRole.ADMIN],
-  "/artist/analytics": ROLE_LEVELS[UserRole.ARTIST],
-  "/artist/nfts/create": ROLE_LEVELS[UserRole.ARTIST],
+  "/organizer": ROLE_LEVELS[UserRole.ORGANIZER],
+  "/artist": ROLE_LEVELS[UserRole.ARTIST],
   "/production-house": ROLE_LEVELS[UserRole.PRODUCTION_HOUSE],
-  "/organizer/events/new": ROLE_LEVELS[UserRole.ORGANIZER],
-  "/organizer/events": ROLE_LEVELS[UserRole.ORGANIZER],
+  "/fan": ROLE_LEVELS[UserRole.FAN],
 }
 
 const DEFAULT_ROUTE_LEVEL = ROLE_LEVELS[UserRole.FAN]
@@ -125,7 +127,10 @@ export async function middleware(request: NextRequest) {
   }
 
   // Allow Public Routes
-  const isPublicRoute = PUBLIC_ROUTES.some((route) => pathname.startsWith(route))
+  const isPublicRoute = 
+    EXACT_PUBLIC_ROUTES.includes(pathname) || 
+    PREFIX_PUBLIC_ROUTES.some((route) => pathname.startsWith(route))
+    
   if (isPublicRoute) {
     // Keep CORS headers by returning the modified response object
     return response
@@ -150,13 +155,13 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  if (pathname.startsWith("/dashboard")) {
-    const requiredRoute = Object.entries(ROUTE_LEVELS).find(([route]) => pathname.startsWith(route))
-    const requiredLevel = requiredRoute ? requiredRoute[1] : DEFAULT_ROUTE_LEVEL
+  const requiredRoute = Object.entries(ROUTE_LEVELS).find(([route]) => pathname.startsWith(route))
+  if (requiredRoute) {
+    const requiredLevel = requiredRoute[1]
     const userLevel = ROLE_LEVELS[payload.role]
 
     if (userLevel < requiredLevel) {
-      return NextResponse.redirect(new URL("/dashboard", request.url))
+      return NextResponse.redirect(new URL("/", request.url))
     }
   }
 
