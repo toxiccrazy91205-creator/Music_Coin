@@ -43,6 +43,23 @@ async function main() {
       console.log(`Created wallet for ${userData.email} (${userData.role}) with balance 1000`)
     }
 
+    if (userData.role === "ARTIST") {
+      const existingArtist = await prisma.artist.findUnique({
+        where: { userId: user.id }
+      })
+      if (!existingArtist) {
+        await prisma.artist.create({
+          data: {
+            userId: user.id,
+            stageName: "Neon Dreamer",
+            bio: "Official demo artist.",
+            genres: ["Electronic", "Synthwave"],
+          }
+        })
+        console.log(`Created Artist profile for ${userData.email}`)
+      }
+    }
+
     console.log(`Seeded user: ${userData.email} (${userData.role}) — ${user.id}`)
   }
 

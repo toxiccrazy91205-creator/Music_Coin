@@ -12,11 +12,24 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
         return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
       }
       
-      const artist = await prisma.artist.findUnique({
+      let artist = await prisma.artist.findUnique({
         where: { userId: session.sub },
         include: { user: { select: { name: true, email: true } } }
       });
       
+      // Auto-create artist profile if it was missed in the seed script
+      if (!artist && session.role === "ARTIST") {
+        artist = await prisma.artist.create({
+          data: {
+            userId: session.sub,
+            stageName: session.email?.split("@")[0] || "New Artist",
+            bio: "Welcome to my official Music Coin artist profile!",
+            genres: ["Electronic", "Pop"],
+          },
+          include: { user: { select: { name: true, email: true } } }
+        });
+      }
+
       if (!artist) {
         return NextResponse.json({ success: false, error: "Artist profile not found" }, { status: 404 });
       }
