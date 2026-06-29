@@ -122,7 +122,7 @@ export default function FanDashboardPage() {
           <CardContent>
             <div className="flex items-center gap-2">
               <Wallet className="size-5 text-primary" />
-              <span className="text-2xl font-bold">{stats?.balance.toFixed(2) || "0.00"}</span>
+              <span className="text-2xl font-bold">{stats?.balance?.toFixed(2) || "0.00"}</span>
               <span className="text-sm text-muted-foreground">MC</span>
             </div>
           </CardContent>

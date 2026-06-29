@@ -89,7 +89,7 @@ export default function PHAnalyticsPage() {
           <CardContent>
             <div className="flex items-center gap-2">
               <DollarSign className="size-5 text-emerald-500" />
-              <span className="text-2xl font-bold">{data?.totalRevenue.toFixed(2) || "0.00"}</span>
+              <span className="text-2xl font-bold">{data?.totalRevenue?.toFixed(2) || "0.00"}</span>
               <span className="text-sm text-muted-foreground">MC</span>
             </div>
           </CardContent>

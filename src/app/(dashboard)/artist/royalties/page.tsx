@@ -86,7 +86,7 @@ export default function ArtistRoyaltiesPage() {
           <CardContent>
             <div className="flex items-center gap-2">
               <DollarSign className="size-6 text-green-500" />
-              <span className="text-3xl font-bold">{summary?.totalEarned.toFixed(2) || "0.00"}</span>
+              <span className="text-3xl font-bold">{summary?.totalEarned?.toFixed(2) || "0.00"}</span>
               <span className="text-sm text-muted-foreground">MC</span>
             </div>
           </CardContent>
@@ -99,7 +99,7 @@ export default function ArtistRoyaltiesPage() {
           <CardContent>
             <div className="flex items-center gap-2">
               <Clock className="size-6 text-amber-500" />
-              <span className="text-3xl font-bold">{summary?.pendingAmount.toFixed(2) || "0.00"}</span>
+              <span className="text-3xl font-bold">{summary?.pendingAmount?.toFixed(2) || "0.00"}</span>
               <span className="text-sm text-muted-foreground">MC</span>
             </div>
           </CardContent>
@@ -112,7 +112,7 @@ export default function ArtistRoyaltiesPage() {
           <CardContent>
             <div className="flex items-center gap-2">
               <CheckCircle className="size-6 text-blue-500" />
-              <span className="text-3xl font-bold">{summary?.paidAmount.toFixed(2) || "0.00"}</span>
+              <span className="text-3xl font-bold">{summary?.paidAmount?.toFixed(2) || "0.00"}</span>
               <span className="text-sm text-muted-foreground">MC</span>
             </div>
           </CardContent>
@@ -145,19 +145,19 @@ export default function ArtistRoyaltiesPage() {
               <div className="space-y-3">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">From NFT Sales</span>
-                  <span className="font-medium">{summary?.totalEarned.toFixed(2) || "0.00"} MC</span>
+                  <span className="font-medium">{summary?.totalEarned?.toFixed(2) || "0.00"} MC</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Pending Payment</span>
-                  <span className="font-medium text-amber-600">{summary?.pendingAmount.toFixed(2) || "0.00"} MC</span>
+                  <span className="font-medium text-amber-600">{summary?.pendingAmount?.toFixed(2) || "0.00"} MC</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Paid to Wallet</span>
-                  <span className="font-medium text-green-600">{summary?.paidAmount.toFixed(2) || "0.00"} MC</span>
+                  <span className="font-medium text-green-600">{summary?.paidAmount?.toFixed(2) || "0.00"} MC</span>
                 </div>
                 <div className="flex justify-between text-sm font-medium border-t pt-2">
                   <span>Total Royalties</span>
-                  <span>{summary?.totalEarned.toFixed(2) || "0.00"} MC</span>
+                  <span>{summary?.totalEarned?.toFixed(2) || "0.00"} MC</span>
                 </div>
               </div>
             </CardContent>

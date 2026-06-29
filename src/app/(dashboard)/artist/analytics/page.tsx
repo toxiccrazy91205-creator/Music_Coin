@@ -104,7 +104,7 @@ export default function ArtistAnalyticsPage() {
           <CardContent>
             <div className="flex items-center gap-2">
               <DollarSign className="size-5 text-green-500" />
-              <span className="text-2xl font-bold">{data?.totalRevenue.toFixed(2) || "0.00"}</span>
+              <span className="text-2xl font-bold">{data?.totalRevenue?.toFixed(2) || "0.00"}</span>
               <span className="text-sm text-muted-foreground">MC</span>
             </div>
             <div className="mt-2 flex items-center gap-1 text-xs">
@@ -197,7 +197,7 @@ export default function ArtistAnalyticsPage() {
               <div>
                 <div className="flex justify-between text-sm mb-1">
                   <span>NFT Sales</span>
-                  <span className="font-medium">{data?.totalRevenue.toFixed(2) || "0.00"} MC</span>
+                  <span className="font-medium">{data?.totalRevenue?.toFixed(2) || "0.00"} MC</span>
                 </div>
                 <div className="h-2 rounded-full bg-muted">
                   <div className="h-2 rounded-full bg-primary" style={{ width: "100%" }} />

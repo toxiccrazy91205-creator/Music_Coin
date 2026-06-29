@@ -156,7 +156,7 @@ export default function PHStakeholdersPage() {
           <CardContent>
             <div className="flex items-center gap-2">
               <DollarSign className="size-6 text-emerald-500" />
-              <span className="text-3xl font-bold">{data?.totalRevenueLocked.toFixed(2) || "0.00"}</span>
+              <span className="text-3xl font-bold">{data?.totalRevenueLocked?.toFixed(2) || "0.00"}</span>
               <span className="text-sm text-muted-foreground">MC</span>
             </div>
           </CardContent>

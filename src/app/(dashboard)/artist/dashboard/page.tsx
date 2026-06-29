@@ -96,7 +96,7 @@ export default function ArtistDashboardPage() {
           <CardContent>
             <div className="flex items-center gap-2">
               <DollarSign className="size-5 text-green-500" />
-              <span className="text-2xl font-bold">{stats?.totalRevenue.toFixed(2) || "0.00"}</span>
+              <span className="text-2xl font-bold">{stats?.totalRevenue?.toFixed(2) || "0.00"}</span>
               <span className="text-sm text-muted-foreground">MC</span>
             </div>
           </CardContent>
@@ -121,7 +121,7 @@ export default function ArtistDashboardPage() {
           <CardContent>
             <div className="flex items-center gap-2">
               <TrendingUp className="size-5 text-blue-500" />
-              <span className="text-2xl font-bold">{stats?.nftSales.toFixed(2) || "0.00"}</span>
+              <span className="text-2xl font-bold">{stats?.nftSales?.toFixed(2) || "0.00"}</span>
               <span className="text-sm text-muted-foreground">MC</span>
             </div>
           </CardContent>
@@ -201,11 +201,11 @@ export default function ArtistDashboardPage() {
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span>NFT Sales</span>
-                  <span className="font-medium">{stats?.nftSales.toFixed(2) || "0.00"} MC</span>
+                  <span className="font-medium">{stats?.nftSales?.toFixed(2) || "0.00"} MC</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span>Wallet Balance</span>
-                  <span className="font-medium">{stats?.totalRevenue.toFixed(2) || "0.00"} MC</span>
+                  <span className="font-medium">{stats?.totalRevenue?.toFixed(2) || "0.00"} MC</span>
                 </div>
               </div>
             </div>
