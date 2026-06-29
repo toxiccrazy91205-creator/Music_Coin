@@ -29,9 +29,9 @@ RUN adduser --system --uid 1001 nextjs
 RUN mkdir .next
 RUN chown nextjs:nodejs .next
 
-# Install global tools for prisma and seeding
+# Install global tools for prisma and seeding, plus runtime dependencies for seed script
 RUN npm install -g prisma tsx typescript @types/node
-
+RUN npm install @prisma/adapter-pg bcryptjs
 # Copy static files
 COPY --from=builder /app/public ./public
 
