@@ -26,7 +26,7 @@ const ROLE_ROUTES: Record<string, string> = {
   ADMIN: "/admin",
   ORGANIZER: "/organizer",
   ARTIST: "/artist/dashboard",
-  FAN: "/fan",
+  FAN: "/fan/dashboard",
   PRODUCTION_HOUSE: "/production-house",
 }
 

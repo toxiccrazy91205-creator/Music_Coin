@@ -47,7 +47,34 @@ export default function PHRoyaltiesPage() {
       try {
         const res = await fetch("/api/production-house/royalties")
         const json = await res.json()
-        if (json.success) setData(json.data)
+        if (json.success) {
+          const splits = json.data.splits || []
+          const transactions = json.data.transactions || []
+          
+          const totalRoyalties = splits.reduce((sum: number, s: any) => sum + Number(s.totalRevenue || 0), 0)
+          const pendingDistributions = splits.filter((s: any) => Number(s.totalRevenue || 0) > 0).length // or some other logic
+          const lastTx = transactions.length > 0 ? transactions[0].createdAt : null
+
+          setData({
+            totalRoyalties,
+            pendingDistributions,
+            lastDistribution: lastTx,
+            revenueSplits: splits.map((s: any) => ({
+              id: s.id,
+              artistName: s.artist?.name || "Unknown",
+              percentage: s.artistPercentage || 0,
+              totalEarned: Number(s.totalRevenue || 0)
+            })),
+            paymentHistory: transactions.map((t: any) => ({
+              id: t.id,
+              amount: Number(t.amount || 0),
+              recipient: t.receiverId,
+              splitName: "Royalty Payment", // Backend doesn't link tx to split easily
+              status: t.status || "COMPLETED",
+              createdAt: t.createdAt
+            }))
+          })
+        }
         else setError(json.error || "Failed to load")
       } catch {} finally {
         setLoading(false)

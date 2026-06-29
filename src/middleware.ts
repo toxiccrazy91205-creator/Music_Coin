@@ -136,13 +136,27 @@ export async function middleware(request: NextRequest) {
     EXACT_PUBLIC_ROUTES.includes(pathname) || 
     PREFIX_PUBLIC_ROUTES.some((route) => pathname.startsWith(route))
     
+  const token = request.cookies.get("__session")?.value
+
   if (isPublicRoute) {
+    if ((pathname === "/login" || pathname === "/register") && token) {
+      const payload = await verifyToken(token)
+      if (payload) {
+        const dashboardRoutes: Record<string, string> = {
+          ADMIN: "/admin",
+          ORGANIZER: "/organizer",
+          ARTIST: "/artist/dashboard",
+          FAN: "/fan/dashboard",
+          PRODUCTION_HOUSE: "/production-house",
+        }
+        return NextResponse.redirect(new URL(dashboardRoutes[payload.role] || "/", request.url))
+      }
+    }
     // Keep CORS headers by returning the modified response object
     return response
   }
 
   // Authentication & Authorization for Protected Routes
-  const token = request.cookies.get("__session")?.value
   if (!token) {
     return isApi 
       ? new NextResponse(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: response.headers })

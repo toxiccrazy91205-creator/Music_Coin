@@ -115,7 +115,6 @@ const roleNav: Record<UserRole, NavItem[]> = {
     { href: "/fan/community", label: "Community", icon: Users },
     { href: "/fan/subscriptions", label: "Subscriptions", icon: Heart },
     { href: "/fan/notifications", label: "Notifications", icon: Bell },
-    { href: "/voting", label: "Voting", icon: Vote },
   ],
 }
 
