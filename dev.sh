@@ -11,6 +11,9 @@ sleep 5
 echo "Pushing database schema..."
 docker compose -f docker-compose.dev.yml exec -T app npx prisma db push
 
+echo "Generating Prisma Client..."
+docker compose -f docker-compose.dev.yml exec -T app npx prisma generate
+
 echo "Seeding database..."
 docker compose -f docker-compose.dev.yml exec -T app npx prisma db seed
 
