@@ -38,8 +38,17 @@ git pull || echo "⚠️  Git pull failed or skipped, continuing to build..."
 echo "🚀 Building and starting Docker containers..."
 sudo docker compose up --build -d
 
+echo "⏳ Waiting for database to initialize (10 seconds)..."
+sleep 10
+
+echo "🔧 Pushing database schema..."
+sudo docker compose exec -T app npx prisma db push --accept-data-loss
+
+echo "🌱 Seeding database..."
+sudo docker compose exec -e DATABASE_URL="postgresql://musiccoin:musiccoin_pass@postgres:5432/music_coin_demo?schema=public" -T app npx tsx prisma/seed.ts || echo "⚠️  Seeding failed or already complete."
+
 echo "=========================================="
 echo "🎉 Deployment successful!"
-echo "The application is now building in the background."
+echo "The application is now running."
 echo "You can check the logs anytime with: sudo docker logs -f music-coin-app"
 echo "=========================================="
