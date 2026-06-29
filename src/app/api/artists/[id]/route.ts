@@ -5,6 +5,24 @@ import { getSession } from "@/lib/auth/session"
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
+    
+    if (id === "me") {
+      const session = await getSession();
+      if (!session) {
+        return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
+      }
+      
+      const artist = await prisma.artist.findUnique({
+        where: { userId: session.sub },
+        include: { user: { select: { name: true, email: true } } }
+      });
+      
+      if (!artist) {
+        return NextResponse.json({ success: false, error: "Artist profile not found" }, { status: 404 });
+      }
+      return NextResponse.json({ success: true, data: artist });
+    }
+
     const artist = await prisma.artist.findUnique({
       where: { id },
       include: {

@@ -46,7 +46,7 @@ export default function ArtistVerificationPage() {
   const updateStatus = async (artistId: string, status: "APPROVED" | "REJECTED") => {
     try {
       const response = await fetch("/api/admin/artists/verification", {
-        method: "PATCH",
+        method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ artistId, status }),
       })

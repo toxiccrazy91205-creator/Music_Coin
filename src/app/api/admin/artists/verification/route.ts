@@ -23,7 +23,7 @@ export async function GET() {
   }
 }
 
-export async function PATCH(request: Request) {
+export async function POST(request: Request) {
   try {
     const session = await getSession()
     if (!session || session.role !== "ADMIN") {
