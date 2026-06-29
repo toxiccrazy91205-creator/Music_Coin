@@ -77,7 +77,11 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // 2. Rate Limiting (DDoS Protection) - Disabled for Local Development to prevent testing blocks
+  // 2. Rate Limiting (DDoS Protection) - Temporarily disabled for EC2 testing
+  // When testing without a reverse proxy, x-forwarded-for is missing, grouping all requests into 'unknown'
+  // which instantly triggers the rate limit due to Next.js asset loading.
+  
+  /*
   const ip = request.headers.get("x-forwarded-for") || "unknown"
   
   if (process.env.NODE_ENV !== "development") {
@@ -100,6 +104,7 @@ export async function middleware(request: NextRequest) {
       RATE_LIMIT_MAP.set(ip, { count: 1, timestamp: now })
     }
   }
+  */
 
   // 3. CSRF Protection (Mutation Requests)
   if (isApi && ["POST", "PUT", "DELETE", "PATCH"].includes(request.method)) {
