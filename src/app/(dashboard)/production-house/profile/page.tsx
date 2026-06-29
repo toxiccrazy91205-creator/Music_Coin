@@ -35,7 +35,16 @@ export default function PHProfilePage() {
       try {
         const res = await fetch("/api/production-house/profile")
         const json = await res.json()
-        if (json.success) setProfile(json.data)
+        if (json.success) {
+          const { user, wallet } = json.data
+          setProfile({
+            companyName: user.name || "",
+            email: user.email || "",
+            role: user.role || "PRODUCTION_HOUSE",
+            walletId: wallet?.id || "",
+            balance: wallet ? Number(wallet.balance) : 0,
+          })
+        }
         else setError(json.error || "Failed to load profile")
       } catch {} finally {
         setLoading(false)

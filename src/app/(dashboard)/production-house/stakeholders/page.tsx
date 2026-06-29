@@ -46,7 +46,22 @@ export default function PHStakeholdersPage() {
       try {
         const res = await fetch("/api/production-house/stakeholders")
         const json = await res.json()
-        if (json.success) setData(json.data)
+        if (json.success) {
+          const splits = json.data || [];
+          setData({
+            totalStakeholders: splits.length,
+            totalRevenueLocked: splits.reduce((sum: number, s: any) => sum + Number(s.totalRevenue || 0), 0),
+            stakeholders: splits.map((s: any) => ({
+              id: s.id,
+              contractName: s.contractName || "Unnamed Contract",
+              artistId: s.artistId,
+              artistName: s.artist?.name || "Unknown Artist",
+              revenueShare: s.productionHousePercentage || 0,
+              royaltyShare: s.artistPercentage || 0,
+              totalEarned: Number(s.totalRevenue || 0)
+            }))
+          });
+        }
         else setError(json.error || "Failed to load")
       } catch {} finally {
         setLoading(false)
@@ -75,7 +90,22 @@ export default function PHStakeholdersPage() {
         setRoyaltyShare(0)
         const reload = await fetch("/api/production-house/stakeholders")
         const reloadJson = await reload.json()
-        if (reloadJson.success) setData(reloadJson.data)
+        if (reloadJson.success) {
+          const splits = reloadJson.data || [];
+          setData({
+            totalStakeholders: splits.length,
+            totalRevenueLocked: splits.reduce((sum: number, s: any) => sum + Number(s.totalRevenue || 0), 0),
+            stakeholders: splits.map((s: any) => ({
+              id: s.id,
+              contractName: s.contractName || "Unnamed Contract",
+              artistId: s.artistId,
+              artistName: s.artist?.name || "Unknown Artist",
+              revenueShare: s.productionHousePercentage || 0,
+              royaltyShare: s.artistPercentage || 0,
+              totalEarned: Number(s.totalRevenue || 0)
+            }))
+          });
+        }
       } else {
         setError(json.error || "Failed to add")
       }
@@ -105,7 +135,22 @@ export default function PHStakeholdersPage() {
         setEditingId(null)
         const reload = await fetch("/api/production-house/stakeholders")
         const reloadJson = await reload.json()
-        if (reloadJson.success) setData(reloadJson.data)
+        if (reloadJson.success) {
+          const splits = reloadJson.data || [];
+          setData({
+            totalStakeholders: splits.length,
+            totalRevenueLocked: splits.reduce((sum: number, s: any) => sum + Number(s.totalRevenue || 0), 0),
+            stakeholders: splits.map((s: any) => ({
+              id: s.id,
+              contractName: s.contractName || "Unnamed Contract",
+              artistId: s.artistId,
+              artistName: s.artist?.name || "Unknown Artist",
+              revenueShare: s.productionHousePercentage || 0,
+              royaltyShare: s.artistPercentage || 0,
+              totalEarned: Number(s.totalRevenue || 0)
+            }))
+          });
+        }
       } else {
         setError(json.error || "Update failed")
       }

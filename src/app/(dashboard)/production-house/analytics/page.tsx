@@ -39,7 +39,21 @@ export default function PHAnalyticsPage() {
       try {
         const res = await fetch("/api/production-house/analytics")
         const json = await res.json()
-        if (json.success) setData(json.data)
+        if (json.success) {
+          setData({
+            totalRevenue: json.data.totalRevenue || 0,
+            revenueGrowth: json.data.revenueGrowth || 0,
+            activeContracts: json.data.activeContracts || 0,
+            totalArtists: json.data.totalArtists || 0,
+            monthlyRevenue: json.data.monthlyRevenue || [],
+            topContracts: (json.data.revenueByContract || []).map((c: any, i: number) => ({
+              id: String(i),
+              artistName: c.name || "Unknown",
+              revenue: c.revenue || 0,
+              share: c.share || 0
+            }))
+          });
+        }
         else setError(json.error || "Failed to load")
       } catch {} finally {
         setLoading(false)

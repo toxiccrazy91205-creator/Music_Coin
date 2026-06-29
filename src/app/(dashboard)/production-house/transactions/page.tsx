@@ -32,7 +32,13 @@ export default function PHTransactionsPage() {
       try {
         const res = await fetch("/api/production-house/transactions")
         const json = await res.json()
-        if (json.success) setData(json.data)
+        if (json.success) {
+          const txs = json.data.transactions || [];
+          setData({
+            totalVolume: txs.reduce((sum: number, t: any) => sum + Number(t.amount || 0), 0),
+            transactions: txs
+          });
+        }
         else setError(json.error || "Failed to load")
       } catch {} finally {
         setLoading(false)
