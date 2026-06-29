@@ -19,7 +19,7 @@ const DEMO_CREDENTIALS = [
   { role: "Organizer", email: "organizer@musiccoin.festival", password: "Organizer@123" },
   { role: "Artist", email: "artist@musiccoin.festival", password: "Artist@123" },
   { role: "Fan", email: "fan@musiccoin.festival", password: "Fan@123" },
-  { role: "Prod. House", email: "ph1@demo.com", password: "demo" },
+  { role: "Prod. House", email: "production@musiccoin.festival", password: "Production@123" },
 ] as const
 
 const ROLE_ROUTES: Record<string, string> = {
