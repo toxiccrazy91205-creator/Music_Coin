@@ -52,7 +52,7 @@ export async function setSessionCookie(payload: Omit<TokenPayload, "iat" | "exp"
 
   cookieStore.set("__session", sessionToken, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: false, // Disabled for EC2 HTTP testing
     sameSite: "lax",
     path: "/",
     maxAge: 60 * 15, // 15 minutes
@@ -67,7 +67,7 @@ export async function setSessionCookie(payload: Omit<TokenPayload, "iat" | "exp"
 
   cookieStore.set("__refresh", refreshToken, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: false, // Disabled for EC2 HTTP testing
     sameSite: "lax",
     path: "/",
     maxAge: 60 * 60 * 24 * 7, // 7 days
@@ -78,14 +78,14 @@ export async function clearSessionCookie(): Promise<void> {
   const cookieStore = await cookies()
   cookieStore.set("__session", "", {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: false, // Disabled for EC2 HTTP testing
     sameSite: "lax",
     path: "/",
     maxAge: 0,
   })
   cookieStore.set("__refresh", "", {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: false, // Disabled for EC2 HTTP testing
     sameSite: "lax",
     path: "/",
     maxAge: 0,
