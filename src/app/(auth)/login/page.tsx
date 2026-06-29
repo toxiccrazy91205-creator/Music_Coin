@@ -39,6 +39,14 @@ export default function LoginPage() {
   const [otpCode, setOtpCode] = useState("")
   const [resendTimer, setResendTimer] = useState(60)
 
+  // Redirect if already logged in (handles browser back button scenarios)
+  const { user, loading } = useAuth()
+  useEffect(() => {
+    if (!loading && user && user.role) {
+      router.replace(ROLE_ROUTES[user.role] ?? "/")
+    }
+  }, [user, loading, router])
+
   useEffect(() => {
     let interval: NodeJS.Timeout
     if (requiresOtp && resendTimer > 0) {

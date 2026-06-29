@@ -28,6 +28,21 @@ export default function RegisterPage() {
   const [registeredEmail, setRegisteredEmail] = useState("")
   const [resendTimer, setResendTimer] = useState(60)
 
+  // Redirect if already logged in (handles browser back button scenarios)
+  const { user, loading } = useAuth()
+  useEffect(() => {
+    if (!loading && user && user.role) {
+      const dashboardRoutes: Record<string, string> = {
+        ADMIN: "/admin",
+        ORGANIZER: "/organizer",
+        ARTIST: "/artist/dashboard",
+        FAN: "/fan/dashboard",
+        PRODUCTION_HOUSE: "/production-house",
+      }
+      router.replace(dashboardRoutes[user.role] ?? "/")
+    }
+  }, [user, loading, router])
+
   useEffect(() => {
     let interval: NodeJS.Timeout
     if (requiresOtp && resendTimer > 0) {

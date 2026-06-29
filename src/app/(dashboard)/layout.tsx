@@ -1,12 +1,26 @@
 "use client"
 
 import { Sidebar } from "./components/sidebar"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { AnimatePresence } from "framer-motion"
 import { PageTransition } from "@/components/ui/page-transition"
+import { useAuth } from "@/hooks/useAuth"
+import { useEffect } from "react"
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
+  const router = useRouter()
+  const { user, isLoading } = useAuth()
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.replace("/login")
+    }
+  }, [user, isLoading, router])
+
+  if (isLoading || !user) {
+    return null // or a loading spinner
+  }
 
   return (
     <div className="min-h-screen bg-background">

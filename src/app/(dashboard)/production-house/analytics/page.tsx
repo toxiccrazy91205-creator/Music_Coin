@@ -45,7 +45,10 @@ export default function PHAnalyticsPage() {
             revenueGrowth: json.data.revenueGrowth || 0,
             activeContracts: json.data.activeContracts || 0,
             totalArtists: json.data.totalArtists || 0,
-            monthlyRevenue: json.data.monthlyRevenue || [],
+            monthlyRevenue: (json.data.monthlyRevenue || []).map((m: any) => ({
+              month: m.month,
+              revenue: m.amount || 0
+            })),
             topContracts: (json.data.revenueByContract || []).map((c: any, i: number) => ({
               id: String(i),
               artistName: c.name || "Unknown",
