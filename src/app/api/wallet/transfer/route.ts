@@ -31,33 +31,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: "Wallet not found" }, { status: 404 })
     }
 
-    const input = receiverEmail.trim()
-    let receiverWallet = null
-    let receiverUserId = ""
-
-    // Try to find by email first (case insensitive)
-    const receiver = await prisma.user.findFirst({ 
-      where: { email: { equals: input, mode: "insensitive" } } 
-    })
-
-    if (receiver) {
-      receiverWallet = await prisma.wallet.findUnique({ where: { userId: receiver.id } })
-      receiverUserId = receiver.id
-    } else {
-      // Try to find by wallet ID
-      try {
-        receiverWallet = await prisma.wallet.findUnique({ where: { id: input } })
-        if (receiverWallet) receiverUserId = receiverWallet.userId
-      } catch (e) {
-        // Ignore UUID cast errors
-      }
+    const receiver = await prisma.user.findUnique({ where: { email: receiverEmail } })
+    if (!receiver) {
+      return NextResponse.json({ success: false, error: "Recipient not found" }, { status: 404 })
     }
-
-    if (!receiverWallet) {
-      return NextResponse.json({ success: false, error: "Recipient not found (use Email or Wallet ID)" }, { status: 404 })
-    }
-    if (receiverUserId === userId) {
+    if (receiver.id === userId) {
       return NextResponse.json({ success: false, error: "Cannot transfer to yourself" }, { status: 400 })
+    }
+
+    const receiverWallet = await prisma.wallet.findUnique({ where: { userId: receiver.id } })
+    if (!receiverWallet) {
+      return NextResponse.json({ success: false, error: "Recipient wallet not found" }, { status: 404 })
     }
 
     const transaction = await WalletService.executeWalletTransfer(

@@ -39,30 +39,12 @@ export async function transferCoinsAction(receiverEmail: string, amount: number)
     const senderWallet = await prisma.wallet.findUnique({ where: { userId: session.sub } })
     if (!senderWallet) return { success: false as const, error: "Wallet not found" }
 
-    const input = receiverEmail.trim()
-    let receiverWallet = null
-    let receiverUserId = ""
+    const receiver = await prisma.user.findUnique({ where: { email: receiverEmail } })
+    if (!receiver) return { success: false as const, error: "Recipient not found" }
+    if (receiver.id === session.sub) return { success: false as const, error: "Cannot transfer to yourself" }
 
-    // Try to find by email first (case insensitive)
-    const receiver = await prisma.user.findFirst({ 
-      where: { email: { equals: input, mode: "insensitive" } } 
-    })
-
-    if (receiver) {
-      receiverWallet = await prisma.wallet.findUnique({ where: { userId: receiver.id } })
-      receiverUserId = receiver.id
-    } else {
-      // Try to find by wallet ID
-      try {
-        receiverWallet = await prisma.wallet.findUnique({ where: { id: input } })
-        if (receiverWallet) receiverUserId = receiverWallet.userId
-      } catch (e) {
-        // Ignore UUID cast errors
-      }
-    }
-
-    if (!receiverWallet) return { success: false as const, error: "Recipient not found (use Email or Wallet ID)" }
-    if (receiverUserId === session.sub) return { success: false as const, error: "Cannot transfer to yourself" }
+    const receiverWallet = await prisma.wallet.findUnique({ where: { userId: receiver.id } })
+    if (!receiverWallet) return { success: false as const, error: "Recipient wallet not found" }
 
     const decimalAmount = new Prisma.Decimal(amount)
     const transaction = await WalletService.executeWalletTransfer(

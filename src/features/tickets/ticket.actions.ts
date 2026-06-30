@@ -28,3 +28,15 @@ export async function getUserTicketsAction() {
     return { success: false as const, error: message }
   }
 }
+
+export async function transferTicketAction(ticketId: string, recipientEmail: string) {
+  try {
+    const session = await getSession()
+    if (!session) return { success: false as const, error: "Not authenticated" }
+    const result = await TicketService.transferTicket(session.sub, ticketId, recipientEmail)
+    return { success: true as const, data: serialize(result) }
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Something went wrong"
+    return { success: false as const, error: message }
+  }
+}

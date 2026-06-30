@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { getUserTicketsAction } from "@/features/tickets/ticket.actions"
+import { getUserTicketsAction, transferTicketAction } from "@/features/tickets/ticket.actions"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Ticket, Calendar, MapPin, QrCode, ArrowUpRight, AlertCircle } from "lucide-react"
@@ -71,6 +71,73 @@ export default function FanTicketsPage() {
                 <p>Status: <span className="font-medium text-green-600">{selectedTicket.status}</span></p>
               </div>
             </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  // Transfer ticket modal
+  const [transferTicketData, setTransferTicketData] = useState<TicketItem | null>(null)
+  const [recipientEmail, setRecipientEmail] = useState("")
+  const [transferring, setTransferring] = useState(false)
+  const [transferError, setTransferError] = useState("")
+
+  const handleTransfer = async () => {
+    if (!transferTicketData || !recipientEmail) return
+    setTransferring(true)
+    setTransferError("")
+    const res = await transferTicketAction(transferTicketData.id, recipientEmail)
+    if (res.success) {
+      setTickets(tickets.filter(t => t.id !== transferTicketData.id))
+      setTransferTicketData(null)
+      setRecipientEmail("")
+      alert("Ticket transferred successfully!")
+    } else {
+      setTransferError(res.error || "Failed to transfer ticket")
+    }
+    setTransferring(false)
+  }
+
+  if (transferTicketData) {
+    return (
+      <div className="space-y-6 max-w-md mx-auto">
+        <Button variant="ghost" className="gap-2" onClick={() => {
+          setTransferTicketData(null)
+          setTransferError("")
+          setRecipientEmail("")
+        }}>
+          <ArrowUpRight className="size-4 rotate-180" />
+          Back to Tickets
+        </Button>
+        <Card>
+          <CardHeader>
+            <CardTitle>Transfer Ticket</CardTitle>
+            <CardDescription>Transfer your ticket to another fan by email.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <p className="font-bold">{transferTicketData.event.title}</p>
+              <p className="text-sm text-muted-foreground">{transferTicketData.tier || "General Admission"}</p>
+            </div>
+            {transferError && <p className="text-sm text-destructive">{transferError}</p>}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Recipient Email</label>
+              <input 
+                type="email" 
+                placeholder="fan@example.com"
+                className="w-full rounded-md border p-2 text-sm"
+                value={recipientEmail}
+                onChange={(e) => setRecipientEmail(e.target.value)}
+              />
+            </div>
+            <Button 
+              className="w-full" 
+              onClick={handleTransfer} 
+              disabled={transferring || !recipientEmail}
+            >
+              {transferring ? "Transferring..." : "Confirm Transfer"}
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -152,7 +219,12 @@ export default function FanTicketsPage() {
                       <QrCode className="mr-1 size-4" />
                       Show QR
                     </Button>
-                    <Button variant="outline" size="sm" className="flex-1">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex-1"
+                      onClick={() => setTransferTicketData(ticket)}
+                    >
                       Transfer
                     </Button>
                   </div>

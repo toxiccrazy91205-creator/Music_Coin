@@ -84,4 +84,23 @@ export const TicketService = {
       orderBy: { purchaseDate: "desc" },
     })
   },
+
+  async transferTicket(userId: string, ticketId: string, recipientEmail: string) {
+    return prisma.$transaction(async (tx) => {
+      const ticket = await tx.ticket.findUnique({ where: { id: ticketId } })
+      if (!ticket) throw new AppError("Ticket not found", 404)
+      if (ticket.userId !== userId) throw new AppError("You do not own this ticket", 403)
+      if (ticket.status !== "VALID") throw new AppError("Ticket is not valid for transfer", 400)
+
+      const recipient = await tx.user.findUnique({ where: { email: recipientEmail } })
+      if (!recipient) throw new AppError("Recipient not found (ensure they have registered)", 404)
+
+      const updatedTicket = await tx.ticket.update({
+        where: { id: ticketId },
+        data: { userId: recipient.id },
+      })
+
+      return updatedTicket
+    })
+  }
 }
