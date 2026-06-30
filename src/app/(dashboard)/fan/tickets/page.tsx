@@ -31,6 +31,12 @@ export default function FanTicketsPage() {
   const [loading, setLoading] = useState(true)
   const [selectedTicket, setSelectedTicket] = useState<TicketItem | null>(null)
 
+  // Transfer ticket state
+  const [transferTicketData, setTransferTicketData] = useState<TicketItem | null>(null)
+  const [recipientEmail, setRecipientEmail] = useState("")
+  const [transferring, setTransferring] = useState(false)
+  const [transferError, setTransferError] = useState("")
+
   useEffect(() => {
     getUserTicketsAction().then((res) => {
       if (res.success) setTickets(res.data as unknown as TicketItem[])
@@ -78,10 +84,6 @@ export default function FanTicketsPage() {
   }
 
   // Transfer ticket modal
-  const [transferTicketData, setTransferTicketData] = useState<TicketItem | null>(null)
-  const [recipientEmail, setRecipientEmail] = useState("")
-  const [transferring, setTransferring] = useState(false)
-  const [transferError, setTransferError] = useState("")
 
   const handleTransfer = async () => {
     if (!transferTicketData || !recipientEmail) return
