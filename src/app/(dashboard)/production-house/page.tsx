@@ -3,10 +3,11 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useAuth } from "@/hooks/useAuth"
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { FileText, Users, DollarSign, Activity, ArrowRight, Bell, TrendingUp, Wallet } from "lucide-react"
+import { FileText, Users, DollarSign, Activity, ArrowRight, Bell, TrendingUp, Wallet, BarChart3 } from "lucide-react"
 import { toast } from "sonner"
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Legend } from "recharts"
 
 interface DashboardData {
   totalContracts: number
@@ -141,16 +142,7 @@ export default function PHDashboard() {
             <ArrowRight className="ml-auto size-4" />
           </Button>
         </Link>
-        <Link href="/production-house/analytics">
-          <Button variant="outline" className="h-auto py-4 w-full justify-start">
-            <TrendingUp className="mr-2 size-5" />
-            <div className="text-left">
-              <div className="font-medium">Analytics</div>
-              <div className="text-xs text-muted-foreground">Revenue reports & performance</div>
-            </div>
-            <ArrowRight className="ml-auto size-4" />
-          </Button>
-        </Link>
+
       </div>
 
       {data && data.recentContracts.length > 0 && (
@@ -179,6 +171,115 @@ export default function PHDashboard() {
           </CardContent>
         </Card>
       )}
+      {/* Embedded Analytics Component */}
+      <div className="pt-6">
+        <ProductionHouseAnalytics />
+      </div>
+    </div>
+  )
+}
+
+function ProductionHouseAnalytics() {
+  const { user } = useAuth()
+  const [data, setData] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const res = await fetch("/api/production-house/analytics")
+        const json = await res.json()
+        if (json.success) {
+          setData({
+            monthlyRevenue: (json.data.monthlyRevenue || []).map((m: any) => ({
+              month: m.month,
+              revenue: m.amount || 0
+            })),
+            topContracts: (json.data.revenueByContract || []).map((c: any, i: number) => ({
+              id: String(i),
+              artistName: c.name || "Unknown",
+              revenue: c.revenue || 0,
+              share: c.share || 0
+            }))
+          });
+        }
+      } catch {} finally {
+        setLoading(false)
+      }
+    }
+    if (user?.role === "PRODUCTION_HOUSE") load()
+  }, [user])
+
+  if (!data) return null
+  const maxRevenue = data.monthlyRevenue ? Math.max(...data.monthlyRevenue.map((m:any) => m.revenue), 1) : 1
+
+  return (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold tracking-tight">Advanced Analytics</h2>
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart3 className="size-5" />
+              Monthly Revenue
+            </CardTitle>
+            <CardDescription>Revenue over time</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {data.monthlyRevenue && data.monthlyRevenue.length > 0 ? (
+              <div className="space-y-2">
+                {data.monthlyRevenue.map((item: any) => (
+                  <div key={item.month} className="flex items-center gap-3">
+                    <span className="w-10 text-xs text-muted-foreground">{item.month}</span>
+                    <div className="flex-1 h-5 rounded bg-muted overflow-hidden">
+                      <div
+                        className="h-full rounded bg-primary transition-all"
+                        style={{ width: `${(item.revenue / maxRevenue) * 100}%` }}
+                      />
+                    </div>
+                    <span className="w-20 text-xs text-right text-muted-foreground">{item.revenue.toFixed(2)} MC</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <BarChart3 className="mx-auto mb-3 size-10 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">No revenue data yet</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="size-5" />
+              Revenue by Contract
+            </CardTitle>
+            <CardDescription>Top performing contracts</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {data.topContracts && data.topContracts.length > 0 ? (
+              <div className="space-y-3">
+                {data.topContracts.map((c: any) => (
+                  <div key={c.id} className="flex items-center justify-between rounded-lg border p-3">
+                    <div>
+                      <p className="text-sm font-medium">{c.artistName}</p>
+                      <p className="text-xs text-muted-foreground">{c.share}% share</p>
+                    </div>
+                    <span className="text-sm font-medium">{c.revenue.toFixed(2)} MC</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <TrendingUp className="mx-auto mb-3 size-10 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">No contract revenue data yet</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }

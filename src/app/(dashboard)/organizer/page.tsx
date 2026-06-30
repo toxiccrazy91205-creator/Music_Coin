@@ -3,9 +3,11 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useAuth } from "@/hooks/useAuth"
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Calendar, Plus, Ticket, DollarSign, Activity } from "lucide-react"
+import { getEventsAction } from "@/features/events/events.actions"
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Legend } from "recharts"
 
 interface DashboardData {
   totalEvents: number
@@ -154,6 +156,136 @@ export default function OrganizerOverview() {
           </CardContent>
         </Card>
       )}
+      {/* Embedded Analytics Component */}
+      <div className="pt-6">
+        <OrganizerAnalytics />
+      </div>
+    </div>
+  )
+}
+
+interface EventAnalytics {
+  totalTicketsSold: number
+  attendance: number
+  capacity: number | null
+  totalRevenue: number
+}
+
+function OrganizerAnalytics() {
+  const [mounted, setMounted] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [events, setEvents] = useState<{ id: string; title: string; eventDate: string }[]>([])
+  const [analyticsMap, setAnalyticsMap] = useState<Record<string, EventAnalytics>>({})
+
+  useEffect(() => {
+    setMounted(true)
+    async function load() {
+      const res = await getEventsAction(undefined, true)
+      if (!res.success) {
+        setLoading(false)
+        return
+      }
+      const eventsData = res.data as unknown as { id: string; title: string; eventDate: string }[]
+      setEvents(eventsData)
+
+      const map: Record<string, EventAnalytics> = {}
+      await Promise.all(
+        eventsData.map(async (ev) => {
+          try {
+            const r = await fetch(`/api/events/${ev.id}/analytics`)
+            const json = await r.json()
+            if (json.success) map[ev.id] = json.data
+          } catch {
+            // skip failed
+          }
+        }),
+      )
+      setAnalyticsMap(map)
+      setLoading(false)
+    }
+    load()
+  }, [])
+
+  if (!mounted) return null
+
+  const chartData = events
+    .filter((ev) => analyticsMap[ev.id])
+    .map((ev) => ({
+      name: ev.title.length > 18 ? ev.title.slice(0, 16) + "..." : ev.title,
+      tickets: analyticsMap[ev.id].totalTicketsSold,
+      attendance: analyticsMap[ev.id].attendance,
+      revenue: analyticsMap[ev.id].totalRevenue,
+    }))
+
+  if (loading) return <div className="p-8 text-center animate-pulse text-muted-foreground">Loading analytics...</div>
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold tracking-tight">Advanced Analytics</h2>
+        <p className="text-muted-foreground">Deep dive into your event performance, attendance, and revenue trends.</p>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Revenue & Tickets per Event</CardTitle>
+            <CardDescription>Breakdown of all your events</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {chartData.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-12">No analytics data available yet.</p>
+            ) : (
+              <div className="h-[300px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#88888833" />
+                    <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
+                    <YAxis yAxisId="left" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
+                    <YAxis yAxisId="right" orientation="right" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
+                    <Tooltip
+                      contentStyle={{ backgroundColor: "hsl(var(--card))", borderRadius: "8px", border: "1px solid hsl(var(--border))" }}
+                      itemStyle={{ color: "hsl(var(--foreground))" }}
+                    />
+                    <Legend />
+                    <Bar yAxisId="left" dataKey="revenue" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name="Revenue (MC)" />
+                    <Bar yAxisId="right" dataKey="tickets" fill="hsl(var(--chart-2))" radius={[4, 4, 0, 0]} name="Tickets Sold" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Tickets vs Check-ins</CardTitle>
+            <CardDescription>Sold vs attended tickets per event</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {chartData.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-12">No analytics data available yet.</p>
+            ) : (
+              <div className="h-[300px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#88888833" />
+                    <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
+                    <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
+                    <Tooltip
+                      contentStyle={{ backgroundColor: "hsl(var(--card))", borderRadius: "8px", border: "1px solid hsl(var(--border))" }}
+                      itemStyle={{ color: "hsl(var(--foreground))" }}
+                    />
+                    <Legend />
+                    <Line type="monotone" dataKey="tickets" stroke="hsl(var(--chart-2))" strokeWidth={3} dot={{ r: 4 }} name="Sold" />
+                    <Line type="monotone" dataKey="attendance" stroke="hsl(var(--chart-3))" strokeWidth={3} dot={{ r: 4 }} name="Checked In" />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }

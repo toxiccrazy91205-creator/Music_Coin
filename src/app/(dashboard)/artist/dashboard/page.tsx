@@ -174,16 +174,7 @@ export default function ArtistDashboardPage() {
           </Button>
         </Link>
 
-        <Link href="/artist/analytics">
-          <Button variant="outline" className="h-auto py-4 w-full justify-start">
-            <Activity className="mr-2 size-5" />
-            <div className="text-left">
-              <div className="font-medium">Analytics</div>
-              <div className="text-xs text-muted-foreground">Performance metrics</div>
-            </div>
-            <ArrowRight className="ml-auto size-4" />
-          </Button>
-        </Link>
+
       </div>
 
       <Card>
@@ -225,6 +216,121 @@ export default function ArtistDashboardPage() {
           </div>
         </CardContent>
       </Card>
+      {/* Embedded Analytics */}
+      <div className="pt-6">
+        <ArtistAnalytics />
+      </div>
+    </div>
+  )
+}
+
+function ArtistAnalytics() {
+  const { user } = useAuth()
+  const [data, setData] = useState<any>(null)
+  
+  useEffect(() => {
+    async function load() {
+      const [walletRes, nftsRes] = await Promise.all([
+        getWalletAction(),
+        getNftsAction()
+      ])
+      const balance = walletRes.success ? Number((walletRes.data as any)?.balance || 0) : 0
+      
+      setData({
+        totalRevenue: balance,
+        monthlyData: [
+          { month: "Jan", revenue: 0, sales: 0 },
+          { month: "Feb", revenue: 0, sales: 0 },
+          { month: "Mar", revenue: 0, sales: 0 },
+          { month: "Apr", revenue: 0, sales: 0 },
+          { month: "May", revenue: 0, sales: 0 },
+          { month: "Jun", revenue: 0, sales: 0 },
+        ],
+      })
+    }
+    load()
+  }, [user])
+
+  if (!data) return null
+
+  return (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold tracking-tight">Advanced Analytics</h2>
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Activity className="size-5" />
+              Revenue Chart
+            </CardTitle>
+            <CardDescription>Revenue over time</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {data.monthlyData && data.monthlyData.length > 0 ? (
+              <div className="space-y-2">
+                {data.monthlyData.map((item: any) => (
+                  <div key={item.month} className="flex items-center gap-3">
+                    <span className="w-8 text-xs text-muted-foreground">{item.month}</span>
+                    <div className="flex-1 h-4 rounded bg-muted overflow-hidden">
+                      <div
+                        className="h-full rounded bg-primary transition-all"
+                        style={{ width: `${Math.min((item.revenue / Math.max(...data.monthlyData.map((d:any) => d.revenue), 1)) * 100, 100)}%` }}
+                      />
+                    </div>
+                    <span className="w-16 text-xs text-right text-muted-foreground">{item.revenue.toFixed(0)} MC</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <Activity className="mx-auto mb-3 size-10 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">No revenue data yet</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Activity className="size-5" />
+              Revenue Breakdown
+            </CardTitle>
+            <CardDescription>Where your earnings come from</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div>
+                <div className="flex justify-between text-sm mb-1">
+                  <span>NFT Sales</span>
+                  <span className="font-medium">{data.totalRevenue.toFixed(2)} MC</span>
+                </div>
+                <div className="h-2 rounded-full bg-muted">
+                  <div className="h-2 rounded-full bg-primary" style={{ width: "100%" }} />
+                </div>
+              </div>
+              <div>
+                <div className="flex justify-between text-sm mb-1">
+                  <span>Royalties</span>
+                  <span className="font-medium">0.00 MC</span>
+                </div>
+                <div className="h-2 rounded-full bg-muted">
+                  <div className="h-2 rounded-full bg-green-500" style={{ width: "0%" }} />
+                </div>
+              </div>
+              <div>
+                <div className="flex justify-between text-sm mb-1">
+                  <span>Ticket Revenue</span>
+                  <span className="font-medium">0.00 MC</span>
+                </div>
+                <div className="h-2 rounded-full bg-muted">
+                  <div className="h-2 rounded-full bg-blue-500" style={{ width: "0%" }} />
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }

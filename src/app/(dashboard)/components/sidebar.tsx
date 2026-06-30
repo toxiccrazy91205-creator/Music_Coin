@@ -63,7 +63,7 @@ const roleNav: Record<UserRole, NavItem[]> = {
     { href: "/admin/royalties", label: "Royalty Management", icon: DollarSign },
     { href: "/admin/tokens", label: "Token Management", icon: Music },
     { href: "/admin/revenue", label: "Reports", icon: FileText },
-    { href: "/admin/analytics", label: "Platform Analytics", icon: PieChart },
+
     { href: "/admin/settings", label: "Settings", icon: Settings },
     { href: "/wallet", label: "My Wallet", icon: Wallet },
   ],
@@ -75,7 +75,7 @@ const roleNav: Record<UserRole, NavItem[]> = {
     { href: "/organizer/attendance", label: "Attendance", icon: QrCode },
     { href: "/organizer/crowdfunding", label: "Crowdfunding", icon: DollarSign },
     { href: "/organizer/live-streams", label: "Live Streams", icon: Activity },
-    { href: "/organizer/analytics", label: "Analytics", icon: BarChart3 },
+
     { href: "/organizer/payments", label: "Payments", icon: DollarSign },
     { href: "/organizer/artists", label: "Artist Management", icon: Mic2 },
     { href: "/organizer/notifications", label: "Notifications", icon: Bell },
@@ -90,7 +90,7 @@ const roleNav: Record<UserRole, NavItem[]> = {
     { href: "/artist/fans", label: "Fan Management", icon: Users },
     { href: "/artist/community", label: "Community", icon: MessageCircle },
     { href: "/artist/support", label: "Support Hub", icon: Heart },
-    { href: "/artist/analytics", label: "Analytics", icon: BarChart3 },
+
     { href: "/artist/wallet", label: "Wallet", icon: Wallet },
     { href: "/artist/notifications", label: "Notifications", icon: Bell },
   ],
@@ -100,7 +100,7 @@ const roleNav: Record<UserRole, NavItem[]> = {
     { href: "/production-house/royalties", label: "Royalty Management", icon: DollarSign },
     { href: "/production-house/stakeholders", label: "Stakeholders", icon: Users },
     { href: "/production-house/transactions", label: "Transactions", icon: ListOrdered },
-    { href: "/production-house/analytics", label: "Analytics", icon: BarChart3 },
+
     { href: "/production-house/profile", label: "Profile Settings", icon: Settings },
     { href: "/wallet", label: "My Wallet", icon: Wallet },
   ],
